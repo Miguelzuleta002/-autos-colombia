@@ -1,0 +1,96 @@
+.celda-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.celda-selector__empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.celda-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.celda-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.celda-card--selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.celda-card__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: var(--primary);
+}
+
+.celda-card__code {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.celda-card__location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.celda-card__type {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* Type tints */
+.celda--car {
+  background: rgba(49, 130, 206, 0.04);
+}
+.celda--car .celda-card__type {
+  background: rgba(49, 130, 206, 0.1);
+  color: var(--info);
+}
+
+.celda--moto {
+  background: rgba(56, 161, 105, 0.04);
+}
+.celda--moto .celda-card__type {
+  background: rgba(56, 161, 105, 0.1);
+  color: var(--success);
+}
+
+.celda--general .celda-card__type {
+  background: rgba(102, 112, 133, 0.1);
+  color: var(--text-secondary);
+}
+
+.celda-card--selected.celda--car,
+.celda-card--selected.celda--moto,
+.celda-card--selected.celda--general {
+  background: var(--primary-light);
+}

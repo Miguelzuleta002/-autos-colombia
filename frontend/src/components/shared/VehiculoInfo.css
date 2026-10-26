@@ -1,0 +1,68 @@
+.vehiculo-info {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.vehiculo-info__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.vehiculo-info__icon {
+  color: var(--primary);
+}
+
+.vehiculo-info__placa {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+}
+
+.vehiculo-info__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.vehiculo-info__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vehiculo-info__item--full {
+  grid-column: 1 / -1;
+}
+
+.vehiculo-info__label {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vehiculo-info__value {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.vehiculo-info__color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+  border: 1px solid var(--border-color);
+}

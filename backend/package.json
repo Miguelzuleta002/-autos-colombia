@@ -1,0 +1,17 @@
+{
+  "name": "autos-colombia-backend",
+  "version": "1.0.0",
+  "description": "Backend API para Autos Colombia - Gestión de parqueadero",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node test-direct.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "uuid": "^9.0.0"
+  }
+}
