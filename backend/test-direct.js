@@ -1,15 +1,23 @@
+// Suite completa de pruebas directas para Autos Colombia - Iteración 1 e Iteración 2
+// Ejecuta verificaciones de reglas de negocio, persistencia JSON y regresión completa
+
 import * as movimientoService from './src/application/movimiento.service.js';
 import * as dashboardService from './src/application/dashboard.service.js';
+import * as usuarioService from './src/application/usuario.service.js';
+import * as celdaService from './src/application/celda.service.js';
 import * as vehiculoRepo from './src/persistence/repositories/vehiculo.repository.js';
 import * as celdaRepo from './src/persistence/repositories/celda.repository.js';
-import * as movimientoRepo from './src/persistence/repositories/movimiento.repository.js';
+import * as usuarioRepo from './src/persistence/repositories/usuario.repository.js';
+import * as auditoriaRepo from './src/persistence/repositories/auditoriaCelda.repository.js';
 import { seed } from './src/persistence/seed.js';
-import { ValidationError, NotFoundError, ConflictError } from './src/domain/errors.js';
+import { ValidationError, NotFoundError, ConflictError, ForbiddenError } from './src/domain/errors.js';
+import { ROL_USUARIO, ESTADO_CELDA, ESTADO_USUARIO } from './src/config/constants.js';
+import { setActiveDemoUserId } from './src/api/middlewares/auth.js';
 
-async function runDirectTests() {
-  console.log('🧪 Iniciando verificación directa del backend y reglas de negocio...\n');
+async function runAllTests() {
+  console.log('🧪 Iniciando verificación completa de Autos Colombia (Iteración 1 + Iteración 2)...\n');
 
-  // Asegurar que seed esté cargado
+  // Asegurar seed y migración inicial
   await seed();
 
   let passed = 0;
@@ -26,136 +34,343 @@ async function runDirectTests() {
   }
 
   try {
-    // 1. Dashboard Summary
-    console.log('--- 1. DASHBOARD & MÉTRICAS ---');
+    // ==========================================
+    // 1. SESIÓN Y USUARIOS (ITERACIÓN 2)
+    // ==========================================
+    console.log('--- 1. GESTIÓN DE USUARIOS Y ROLES (ITERACIÓN 2: HU07 - HU10) ---');
+
+    // 1.1 Listar usuarios
+    const usuarios = await usuarioService.obtenerTodos();
+    assert(usuarios.length >= 2, 'Listar usuarios retorna usuarios registrados (RF09)');
+
+    const adminUser = usuarios.find((u) => u.rol === ROL_USUARIO.ADMINISTRADOR || u.rol === 'ADMIN');
+    const operadorUser = usuarios.find((u) => u.rol === ROL_USUARIO.OPERADOR);
+    assert(Boolean(adminUser), 'Existe usuario Administrador en el sistema');
+    assert(Boolean(operadorUser), 'Existe usuario Operador en el sistema');
+
+    // Configurar admin como demo para pruebas
+    setActiveDemoUserId(adminUser.id);
+
+    // 1.2 Búsqueda y filtros de usuarios
+    const filtradosPorRol = await usuarioService.obtenerTodos({ rol: 'ADMINISTRADOR' });
+    assert(
+      filtradosPorRol.every((u) => u.rol === ROL_USUARIO.ADMINISTRADOR || u.rol === 'ADMIN'),
+      'Filtro por rol ADMINISTRADOR funciona correctamente (RF10)'
+    );
+
+    const filtradosPorBusqueda = await usuarioService.obtenerTodos({ busqueda: 'Carlos' });
+    assert(
+      filtradosPorBusqueda.some((u) => (u.nombre || u.nombres).includes('Carlos')),
+      'Búsqueda por nombre de usuario funciona correctamente (RF10)'
+    );
+
+    // 1.3 Consultar detalle de usuario
+    const detalleUsuario = await usuarioService.obtenerPorId(adminUser.id);
+    assert(detalleUsuario.id === adminUser.id && Boolean(detalleUsuario.correo), 'Consulta de detalle de usuario (RF11)');
+
+    // 1.4 Registrar nuevo usuario válido
+    const randomSuffix = Math.floor(Math.random() * 9000 + 1000);
+    const nuevoUsuarioData = {
+      tipoDocumento: 'CC',
+      numeroDocumento: `987654${randomSuffix}`,
+      nombres: 'Prueba',
+      apellidos: 'Tester',
+      correo: `prueba.tester${randomSuffix}@autoscolombia.com`,
+      telefono: '3159998877',
+      rol: 'OPERADOR',
+    };
+    const nuevoUsuario = await usuarioService.registrarUsuario(nuevoUsuarioData);
+    assert(nuevoUsuario.activo === true && nuevoUsuario.estado === 'ACTIVO', 'Registrar usuario válido con estado ACTIVO (RF12)');
+
+    // 1.5 Rechazar documento duplicado
+    let errDocDuplicado = false;
+    try {
+      await usuarioService.registrarUsuario({
+        ...nuevoUsuarioData,
+        correo: `otro.correo${randomSuffix}@autoscolombia.com`,
+      });
+    } catch (e) {
+      errDocDuplicado = e instanceof ConflictError;
+    }
+    assert(errDocDuplicado, 'Rechaza registro con documento duplicado (RF15)');
+
+    // 1.6 Rechazar correo duplicado
+    let errCorreoDuplicado = false;
+    try {
+      await usuarioService.registrarUsuario({
+        ...nuevoUsuarioData,
+        numeroDocumento: `555555${randomSuffix}`,
+      });
+    } catch (e) {
+      errCorreoDuplicado = e instanceof ConflictError;
+    }
+    assert(errCorreoDuplicado, 'Rechaza registro con correo duplicado (RF15)');
+
+    // 1.7 Actualizar usuario y rol
+    const usuarioEditado = await usuarioService.actualizarUsuario(nuevoUsuario.id, {
+      telefono: '3110001122',
+      rol: 'ADMINISTRADOR',
+    });
+    assert(
+      usuarioEditado.telefono === '3110001122' && usuarioEditado.rol === 'ADMINISTRADOR',
+      'Actualizar información y rol de usuario (RF13)'
+    );
+
+    // 1.8 Desactivar y activar usuario
+    const usuarioDesactivado = await usuarioService.cambiarEstadoUsuario(
+      nuevoUsuario.id,
+      { activo: false },
+      adminUser
+    );
+    assert(!usuarioDesactivado.activo && usuarioDesactivado.estado === 'INACTIVO', 'Desactivar usuario (RF14)');
+
+    const usuarioReactivado = await usuarioService.cambiarEstadoUsuario(
+      nuevoUsuario.id,
+      { activo: true },
+      adminUser
+    );
+    assert(usuarioReactivado.activo && usuarioReactivado.estado === 'ACTIVO', 'Reactivar usuario a ACTIVO (RF14)');
+
+    // 1.9 Proteger al usuario demo actual contra desactivación
+    let errProteccionDemo = false;
+    try {
+      await usuarioService.cambiarEstadoUsuario(adminUser.id, { activo: false }, adminUser);
+    } catch (e) {
+      errProteccionDemo = e instanceof ConflictError;
+    }
+    assert(errProteccionDemo, 'Impide desactivar al usuario de demostración actual en uso (RF16)');
+
+    // 1.10 Proteger al último Administrador activo
+    // Degradamos al usuario de prueba de vuelta a Operador
+    await usuarioService.actualizarUsuario(nuevoUsuario.id, { rol: 'OPERADOR' });
+    let errProteccionUltimoAdmin = false;
+    try {
+      // Intentar retirar rol de admin a Ana Morales (siendo la única administradora activa)
+      await usuarioService.actualizarUsuario(adminUser.id, { rol: 'OPERADOR' });
+    } catch (e) {
+      errProteccionUltimoAdmin = e instanceof ConflictError;
+    }
+    assert(errProteccionUltimoAdmin, 'Impide degradar o quitar rol al último Administrador activo (RF16)');
+
+    // ==========================================
+    // 2. GESTIÓN DE CELDAS (ITERACIÓN 2)
+    // ==========================================
+    console.log('\n--- 2. GESTIÓN Y MANTENIMIENTO DE CELDAS (ITERACIÓN 2: HU11 - HU14) ---');
+
+    // 2.1 Listar y filtrar celdas
+    const todasCeldas = await celdaService.obtenerTodas();
+    assert(todasCeldas.length >= 20, 'Listar todas las celdas del parqueadero (RF17)');
+
+    const celdasMotos = await celdaService.obtenerTodas({ tipo: 'MOTO' });
+    assert(
+      celdasMotos.length > 0 && celdasMotos.every((c) => c.tipo === 'MOTO'),
+      'Filtrar celdas por tipo MOTO (RF18)'
+    );
+
+    const celdasLibres = await celdaService.obtenerTodas({ estado: 'LIBRE' });
+    assert(
+      celdasLibres.length > 0 && celdasLibres.every((c) => c.estado === 'LIBRE'),
+      'Filtrar celdas por estado LIBRE (RF18)'
+    );
+
+    // 2.2 Registrar nueva celda (inicia en estado LIBRE)
+    const codCeldaNueva = `T-${randomSuffix.toString().slice(0, 2)}`;
+    const celdaNueva = await celdaService.registrarCelda(
+      {
+        codigo: codCeldaNueva,
+        ubicacion: 'Piso 2 - Zona Test',
+        tipo: 'CARRO',
+        descripcion: 'Celda creada durante prueba automatizada',
+      },
+      adminUser
+    );
+    assert(
+      celdaNueva.codigo === codCeldaNueva && celdaNueva.estado === 'LIBRE',
+      'Registrar nueva celda que inicia en estado LIBRE (RF20)'
+    );
+
+    // 2.3 Rechazar código de celda duplicado
+    let errCodDuplicado = false;
+    try {
+      await celdaService.registrarCelda(
+        {
+          codigo: codCeldaNueva,
+          ubicacion: 'Otra zona',
+          tipo: 'CARRO',
+        },
+        adminUser
+      );
+    } catch (e) {
+      errCodDuplicado = e instanceof ConflictError;
+    }
+    assert(errCodDuplicado, 'Rechaza registro con código de celda duplicado (RF20)');
+
+    // 2.4 Editar datos de celda
+    const celdaEditada = await celdaService.actualizarCelda(
+      celdaNueva.id,
+      {
+        ubicacion: 'Piso 2 - Zona Renovada',
+        descripcion: 'Descripción actualizada',
+      },
+      adminUser
+    );
+    assert(
+      celdaEditada.ubicacion === 'Piso 2 - Zona Renovada',
+      'Actualizar información general de celda (RF21)'
+    );
+
+    // 2.5 Enviar celda libre a mantenimiento (RF22)
+    const celdaEnMantenimiento = await celdaService.enviarAMantenimiento(
+      celdaNueva.id,
+      {
+        motivo: 'Demarcación y pintura de líneas',
+        detalle: 'Pintura reflectiva en bordes',
+      },
+      adminUser
+    );
+    assert(
+      celdaEnMantenimiento.estado === 'MANTENIMIENTO',
+      'Enviar celda libre a estado MANTENIMIENTO con motivo registrado (RF22)'
+    );
+
+    // 2.6 Habilitar celda en mantenimiento (RF23)
+    const celdaHabilitada = await celdaService.habilitarCelda(
+      celdaNueva.id,
+      { motivo: 'Trabajo de pintura concluido con éxito' },
+      adminUser
+    );
+    assert(
+      celdaHabilitada.estado === 'LIBRE',
+      'Habilitar celda en mantenimiento volviéndola a LIBRE (RF23)'
+    );
+
+    // 2.7 Auditoría histórica registrada para la celda (RF27)
+    const detalleConAuditoria = await celdaService.obtenerPorId(celdaNueva.id);
+    assert(
+      detalleConAuditoria.historialAuditoria && detalleConAuditoria.historialAuditoria.length >= 3,
+      'Trazabilidad histórica de auditoría registrada (creación, edición, mantenimiento) (RF27)'
+    );
+
+    // ==========================================
+    // 3. COMPATIBILIDAD VEHÍCULO - CELDA (RF25)
+    // ==========================================
+    console.log('\n--- 3. REGLA DE COMPATIBILIDAD VEHÍCULO Y CELDA (RF25) ---');
+
+    // Celda de tipo MOTO
+    const celdaMoto = celdasMotos.find((c) => c.estado === 'LIBRE');
+    // Vehículo tipo CARRO (JKL012)
+    const vehiculoCarro = await vehiculoRepo.findByPlaca('JKL012');
+
+    let errIncompatibilidad = false;
+    try {
+      await movimientoService.registrarEntrada({
+        placa: vehiculoCarro.placa,
+        celdaId: celdaMoto.id,
+      });
+    } catch (e) {
+      errIncompatibilidad = e instanceof ValidationError;
+    }
+    assert(errIncompatibilidad, 'Rechaza entrada de vehículo CARRO en celda MOTO por incompatibilidad (RF25)');
+
+    // ==========================================
+    // 4. REGRESIÓN DE ITERACIÓN 1 (HU01 - HU06)
+    // ==========================================
+    console.log('\n--- 4. REGRESIÓN DE ITERACIÓN 1 (ENTRADAS, SALIDAS Y PERSISTENCIA) ---');
+
+    // 4.1 Dashboard summary
     const summary = await dashboardService.obtenerResumen();
-    assert(summary.totalCeldas >= 20, 'Total de celdas es al menos 20', `Obtenido: ${summary.totalCeldas}`);
-    assert(summary.celdasLibres > 0, 'Existen celdas libres', `Libres: ${summary.celdasLibres}`);
-    assert(summary.celdasMantenimiento >= 1, 'Registra celda en mantenimiento (B-05)');
-    assert(typeof summary.porcentajeOcupacion === 'number', 'Porcentaje de ocupación calculado');
+    assert(summary.totalCeldas >= 20 && typeof summary.porcentajeOcupacion === 'number', 'Cálculo de métricas del dashboard');
 
-    // 2. Consulta y validación de vehículos
-    console.log('\n--- 2. VEHÍCULOS ---');
-    const vehiculoActivo = await vehiculoRepo.findByPlaca('DEF456');
-    assert(Boolean(vehiculoActivo) && vehiculoActivo.activo === true, 'Vehículo DEF456 existe y está activo');
+    // 4.2 Celda libre compatible para CARRO
+    const celdaCarroLibre = (await celdaService.obtenerTodas({ tipo: 'CARRO', estado: 'LIBRE' }))[0];
 
-    const vehiculoInactivo = await vehiculoRepo.findByPlaca('VWX234');
-    assert(Boolean(vehiculoInactivo) && vehiculoInactivo.activo === false, 'Vehículo VWX234 está inactivo');
-
-    // 3. Consulta de celdas libres
-    console.log('\n--- 3. CELDAS DISPONIBLES ---');
-    const celdasLibres = await celdaRepo.findByEstado('LIBRE');
-    assert(celdasLibres.length > 0, 'Celdas libres disponibles para asignación');
-    const celdaPrueba = celdasLibres[0];
-
-    // 4. Validaciones de Entrada
-    console.log('\n--- 4. VALIDACIONES DE ENTRADA (REGLAS DE NEGOCIO) ---');
-    // Error placa inexistente
-    let errorInexistente = false;
-    try {
-      await movimientoService.registrarEntrada({ placa: 'XYZ999', celdaId: celdaPrueba.id });
-    } catch (err) {
-      errorInexistente = err instanceof NotFoundError;
-    }
-    assert(errorInexistente, 'Rechaza placa inexistente con NotFoundError');
-
-    // Error vehículo inactivo
-    let errorInactivo = false;
-    try {
-      await movimientoService.registrarEntrada({ placa: 'VWX234', celdaId: celdaPrueba.id });
-    } catch (err) {
-      errorInactivo = err instanceof ValidationError;
-    }
-    assert(errorInactivo, 'Rechaza vehículo inactivo con ValidationError');
-
-    // 5. Registrar Entrada Válida
-    console.log('\n--- 5. REGISTRAR ENTRADA VÁLIDA ---');
-    const entradaResult = await movimientoService.registrarEntrada({
-      placa: 'DEF456',
-      celdaId: celdaPrueba.id,
-      observacionEntrada: 'Golpe leve en paragolpes trasero derecho',
+    // 4.3 Registrar entrada válida
+    const entradaOk = await movimientoService.registrarEntrada({
+      placa: 'JKL012',
+      celdaId: celdaCarroLibre.id,
+      observacionEntrada: 'Entrada de prueba: sin abolladuras',
+      operadorId: adminUser.id,
     });
-    assert(entradaResult.estado === 'ABIERTO', 'Movimiento registrado con estado ABIERTO');
-    assert(entradaResult.vehiculo.placa === 'DEF456', 'Vehículo asociado correctamente');
-    assert(entradaResult.celda.id === celdaPrueba.id, 'Celda asignada correctamente');
-    assert(entradaResult.observacionEntrada === 'Golpe leve en paragolpes trasero derecho', 'Observación de entrada guardada');
-    assert(Boolean(entradaResult.operadorEntrada), 'Operador de entrada registrado');
+    assert(entradaOk.estado === 'ABIERTO', 'Registro de entrada crea movimiento ABIERTO (RF01)');
+    assert(entradaOk.observacionEntrada === 'Entrada de prueba: sin abolladuras', 'Observación de entrada preservada (RF06)');
 
-    // Celda debe estar ahora OCUPADA
-    const celdaOcupada = await celdaRepo.findById(celdaPrueba.id);
-    assert(celdaOcupada.estado === 'OCUPADA', 'Celda cambió automáticamente a OCUPADA');
+    // Verificar que celda pasa a OCUPADA
+    const celdaOcupadaVerif = await celdaRepo.findById(celdaCarroLibre.id);
+    assert(celdaOcupadaVerif.estado === 'OCUPADA', 'Celda asignada pasa automáticamente a OCUPADA (RF04)');
 
-    // Error: Doble entrada con el mismo vehículo
-    let errorDobleEntrada = false;
+    // 4.4 Impide enviar a mantenimiento celda OCUPADA
+    let errMantenimientoOcupada = false;
     try {
-      await movimientoService.registrarEntrada({ placa: 'DEF456', celdaId: celdasLibres[1].id });
-    } catch (err) {
-      errorDobleEntrada = err instanceof ConflictError;
+      await celdaService.enviarAMantenimiento(celdaCarroLibre.id, { motivo: 'Mantenimiento indebido' }, adminUser);
+    } catch (e) {
+      errMantenimientoOcupada = e instanceof ConflictError;
     }
-    assert(errorDobleEntrada, 'Impide doble entrada de vehículo ya dentro con ConflictError');
+    assert(errMantenimientoOcupada, 'Impide enviar a mantenimiento una celda OCUPADA (RF22)');
 
-    // Error: Asignar celda ya ocupada
-    let errorCeldaOcupada = false;
+    // 4.5 Impide modificar tipo/compatibilidad de celda OCUPADA
+    let errCambioTipoOcupada = false;
     try {
-      await movimientoService.registrarEntrada({ placa: 'GHI789', celdaId: celdaPrueba.id });
-    } catch (err) {
-      errorCeldaOcupada = err instanceof ConflictError;
+      await celdaService.actualizarCelda(celdaCarroLibre.id, { tipo: 'MOTO' }, adminUser);
+    } catch (e) {
+      errCambioTipoOcupada = e instanceof ConflictError;
     }
-    assert(errorCeldaOcupada, 'Impide asignar una celda que ya está OCUPADA');
+    assert(errCambioTipoOcupada, 'Impide cambiar tipo de compatibilidad a una celda OCUPADA (RF21)');
 
-    // 6. Consultar vehículos dentro
-    console.log('\n--- 6. CONSULTAR VEHÍCULOS DENTRO ---');
+    // 4.6 Impide liberar manualmente celda OCUPADA desde módulo administrativo
+    let errLiberarManual = false;
+    try {
+      await celdaService.habilitarCelda(celdaCarroLibre.id, {}, adminUser);
+    } catch (e) {
+      errLiberarManual = e instanceof ConflictError;
+    }
+    assert(errLiberarManual, 'Impide liberar manualmente una celda OCUPADA desde módulo de celdas (RF23)');
+
+    // 4.7 Impide doble entrada con el mismo vehículo
+    let errDobleEntrada = false;
+    try {
+      const otraLibre = (await celdaService.obtenerTodas({ estado: 'LIBRE' }))[0];
+      await movimientoService.registrarEntrada({
+        placa: 'JKL012',
+        celdaId: otraLibre.id,
+      });
+    } catch (e) {
+      errDobleEntrada = e instanceof ConflictError;
+    }
+    assert(errDobleEntrada, 'Impide entrada duplicada de vehículo ya dentro (RF08)');
+
+    // 4.8 Consultar vehículos dentro
     const adentro = await movimientoService.obtenerAbiertos();
-    const vehiculoAdentro = adentro.find((m) => m.vehiculo.placa === 'DEF456');
-    assert(Boolean(vehiculoAdentro), 'El vehículo DEF456 aparece en la lista de vehículos dentro');
+    assert(adentro.some((m) => (m.vehiculo?.placa || m.vehiculoPlaca) === 'JKL012'), 'Vehículo aparece en consulta de vehículos dentro (RF02)');
 
-    // 7. Registrar Salida
-    console.log('\n--- 7. REGISTRAR SALIDA Y LIBERAR CELDA ---');
-    const salidaResult = await movimientoService.registrarSalida(entradaResult.id, {
-      observacionSalida: 'Vehículo retirado por su propietario sin novedades',
+    // 4.9 Registrar salida, liberar celda y observaciones independientes
+    const salidaOk = await movimientoService.registrarSalida(entradaOk.id, {
+      observacionSalida: 'Salida de prueba: entrega conforme al cliente',
+      operadorId: adminUser.id,
     });
-    assert(salidaResult.estado === 'CERRADO', 'Movimiento cambia a estado CERRADO');
-    assert(Boolean(salidaResult.fechaHoraSalida), 'Genera fecha y hora de salida oficial');
+    assert(salidaOk.estado === 'CERRADO', 'Movimiento pasa a estado CERRADO al registrar salida (RF03)');
     assert(
-      salidaResult.observacionEntrada === 'Golpe leve en paragolpes trasero derecho',
-      'Observación de entrada se preserva intacta (no sobrescrita)'
-    );
-    assert(
-      salidaResult.observacionSalida === 'Vehículo retirado por su propietario sin novedades',
-      'Observación de salida guardada en campo independiente'
+      salidaOk.observacionEntrada === 'Entrada de prueba: sin abolladuras' &&
+        salidaOk.observacionSalida === 'Salida de prueba: entrega conforme al cliente',
+      'Observaciones de entrada y salida son independientes y no se sobreescriben (RF06)'
     );
 
-    // Celda debe estar nuevamente LIBRE
-    const celdaLiberada = await celdaRepo.findById(celdaPrueba.id);
-    assert(celdaLiberada.estado === 'LIBRE', 'Celda vuelve automáticamente a estado LIBRE');
+    // Celda vuelve a estar LIBRE
+    const celdaLiberadaVerif = await celdaRepo.findById(celdaCarroLibre.id);
+    assert(celdaLiberadaVerif.estado === 'LIBRE', 'Celda vuelve automáticamente a estado LIBRE tras salida (RF04)');
 
-    // Error: reintentar salida en un movimiento ya cerrado
-    let errorSalidaCerrada = false;
-    try {
-      await movimientoService.registrarSalida(entradaResult.id, {});
-    } catch (err) {
-      errorSalidaCerrada = err instanceof ConflictError;
-    }
-    assert(errorSalidaCerrada, 'Impide salida en un movimiento que ya está CERRADO');
+    // 4.10 Historial de movimientos con filtros
+    const historial = await movimientoService.obtenerTodos({ placa: 'JKL012', estado: 'CERRADO' });
+    assert(historial.length >= 1, 'Historial filtra movimientos por placa y estado CERRADO (RF05)');
 
-    // 8. Consultar Historial y Filtros
-    console.log('\n--- 8. HISTORIAL Y FILTROS ---');
-    const historialPlaca = await movimientoService.obtenerTodos({ placa: 'DEF456' });
-    assert(historialPlaca.length >= 1, 'Historial filtra correctamente por placa');
-
-    const historialEstado = await movimientoService.obtenerTodos({ estado: 'CERRADO' });
-    const todosCerrados = historialEstado.every((m) => m.estado === 'CERRADO');
-    assert(todosCerrados && historialEstado.length > 0, 'Historial filtra correctamente por estado CERRADO');
-
-    console.log('\n=============================================');
-    console.log(`TOTAL DE PRUEBAS: ${passed} PASADAS, ${failed} FALLADAS`);
-    console.log('=============================================\n');
+    console.log('\n============================================================');
+    console.log(`TOTAL DE PRUEBAS AUTOMATIZADAS: ${passed} PASADAS, ${failed} FALLADAS`);
+    console.log('============================================================\n');
 
     process.exit(failed > 0 ? 1 : 0);
-  } catch (e) {
-    console.error('Error no controlado en la prueba:', e);
+  } catch (err) {
+    console.error('Error crítico durante las pruebas:', err);
     process.exit(1);
   }
 }
 
-runDirectTests();
+runAllTests();

@@ -1,0 +1,35 @@
+ID,Historia,Modulo,Precondiciones,Pasos,Resultado_Esperado,Resultado_Obtenido,Estado
+TC-USR-01,HU07,Usuarios,Sesion con rol ADMINISTRADOR activa,"1. Consultar GET /api/usuarios 2. Evaluar arreglo recibido",Retorna lista de usuarios con atributos de Iteracion 2,200 OK con nomina completa de usuarios,Aprobado
+TC-USR-02,HU07,Usuarios,Usuarios registrados en el sistema,"1. Filtrar por rol=ADMINISTRADOR 2. Filtrar por busqueda=Carlos",Filtra exactamente usuarios coincidentes,Coincidencias exactas obtenidas,Aprobado
+TC-USR-03,HU08,Usuarios,Sesion ADMINISTRADOR,1. Enviar POST /api/usuarios con datos validos y unicos,HTTP 201 y usuario creado en estado ACTIVO,201 Created con entidad poblada,Aprobado
+TC-USR-04,HU08,Usuarios,Usuario existente con documento X,1. Enviar POST /api/usuarios con documento X duplicado,HTTP 409 Conflict indicando documento duplicado,409 Conflict con mensaje descriptivo,Aprobado
+TC-USR-05,HU08,Usuarios,Usuario existente con correo Y,1. Enviar POST /api/usuarios con correo Y duplicado,HTTP 409 Conflict indicando correo duplicado,409 Conflict con mensaje descriptivo,Aprobado
+TC-USR-06,HU09,Usuarios,Usuario existente,1. Enviar PATCH /api/usuarios/:id actualizando telefono y rol,Informacion actualizada y fechaActualizacion renovada,200 OK con campos modificados,Aprobado
+TC-USR-07,HU10,Usuarios,Usuario activo de prueba,"1. Enviar PATCH /api/usuarios/:id/estado con activo=false 2. Reactivar con activo=true",Alterna entre INACTIVO y ACTIVO correctamente,200 OK en ambas transiciones,Aprobado
+TC-USR-08,HU10,Usuarios,Usuario inactivo,1. Intentar registrar entrada usando id de usuario inactivo como operador,Rechaza operacion indicando que el usuario esta inactivo,400 ValidationError por usuario inactivo,Aprobado
+TC-USR-09,HU10,Usuarios,Solo 1 Administrador activo en el sistema,1. Intentar desactivar o degradar a Operador al unico Administrador,HTTP 409 impidiendo dejar el sistema sin Administrador,409 Conflict protector activado,Aprobado
+TC-USR-10,HU07,Usuarios,Sesion activa de Operador,1. Con usuario Operador consultar GET o POST /api/usuarios,HTTP 403 Forbidden,403 Forbidden bloqueando acceso,Aprobado
+TC-USR-11,HU10,Usuarios,Usuario con historial de movimientos pasados,1. Desactivar usuario y consultar movimientos pasados,El nombre y referencia del operador en movimientos se mantiene intacto,Integridad y referencias conservadas,Aprobado
+TC-CEL-01,HU11,Celdas,Celdas pobladas en el sistema,"1. Consultar GET /api/celdas 2. Consultar GET /api/celdas/:id",Retorna inventario completo y detalle con ocupacion,200 OK con celdas y ocupacion poblada,Aprobado
+TC-CEL-02,HU11,Celdas,Inventario de celdas,"1. Filtrar por tipo=MOTO 2. Filtrar por estado=LIBRE",Filtra solo las celdas coincidentes,Coincidencias exactas obtenidas,Aprobado
+TC-CEL-03,HU12,Celdas,Sesion ADMINISTRADOR,1. Enviar POST /api/celdas con codigo nuevo,Celda creada con estado inicial LIBRE,201 Created en estado LIBRE,Aprobado
+TC-CEL-04,HU12,Celdas,Celda existente con codigo A-01,1. Enviar POST /api/celdas con codigo A-01,HTTP 409 Conflict por codigo duplicado,409 Conflict con mensaje de rechazo,Aprobado
+TC-CEL-05,HU13,Celdas,Celda existente,1. Enviar PATCH /api/celdas/:id con nueva ubicacion,Ubicacion modificada exitosamente,200 OK con ubicacion actualizada,Aprobado
+TC-CEL-06,HU13,Celdas,Celda con estado OCUPADA,1. Intentar modificar el tipo o compatibilidad de la celda ocupada,HTTP 409 Conflict impidiendo cambiar tipo a celda ocupada,409 Conflict protegiendo ocupacion,Aprobado
+TC-CEL-07,HU14,Celdas,Celda en estado LIBRE,1. Enviar POST /api/celdas/:id/mantenimiento con motivo,Celda pasa a estado MANTENIMIENTO y registra auditoria,200 OK en estado MANTENIMIENTO,Aprobado
+TC-CEL-08,HU14,Celdas,Celda en MANTENIMIENTO,1. Enviar POST /api/celdas/:id/habilitar,Celda vuelve al estado LIBRE y registra auditoria,200 OK en estado LIBRE,Aprobado
+TC-CEL-09,HU14,Celdas,Celda con estado OCUPADA,1. Intentar enviar a mantenimiento celda ocupada,HTTP 409 Conflict impidiendo poner en mantenimiento celda con vehiculo,409 Conflict bloqueando transicion,Aprobado
+TC-CEL-10,HU14,Celdas,Celda con estado OCUPADA,1. Intentar llamar a endpoint de habilitar en celda ocupada,HTTP 409 Conflict impidiendo liberar celda ocupada administrativamente,409 Conflict protegiendo salida oficial,Aprobado
+TC-CEL-11,HU01,Celdas,Vehiculo CARRO y Celda MOTO,1. Intentar registrar entrada de CARRO en celda MOTO,HTTP 400 ValidationError por incompatibilidad,400 ValidationError rechazando ingreso,Aprobado
+TC-CEL-12,HU14,Celdas,Celda con eventos de creacion y mantenimiento,1. Consultar GET /api/celdas/:id y revisar historialAuditoria,Cronologia historica completa con fechas usuario y motivos,Trazabilidad historica verificada,Aprobado
+TC-CEL-13,HU12,Celdas,Sesion activa de Operador,1. Con usuario Operador enviar POST/PATCH a /api/celdas,HTTP 403 Forbidden en todas las mutaciones,403 Forbidden bloqueando mutaciones,Aprobado
+TC-REG-01,HU01,Regresion,Vehiculo activo y celda libre compatible,1. POST /api/movimientos/entrada,Movimiento creado en ABIERTO y celda pasa a OCUPADA,201 Created y celda OCUPADA,Aprobado
+TC-REG-02,HU06,Regresion,Vehiculo ya dentro,1. Intentar registrar segunda entrada con la misma placa,HTTP 409 Conflict por entrada duplicada,409 Conflict rechazando duplicado,Aprobado
+TC-REG-03,HU06,Regresion,Celda ocupada o en mantenimiento,1. Intentar asignar celda no libre en entrada,HTTP 409 Conflict indicando celda no disponible,409 Conflict indicando no disponibilidad,Aprobado
+TC-REG-04,HU03,Regresion,Movimiento con estado ABIERTO,1. POST /api/movimientos/:id/salida,Movimiento pasa a CERRADO y celda queda LIBRE,200 OK y celda LIBRE,Aprobado
+TC-REG-05,HU06,Regresion,Movimiento ya CERRADO,1. Intentar registrar salida sobre movimiento cerrado,HTTP 409 Conflict,409 Conflict impidiendo doble salida,Aprobado
+TC-REG-06,HU05,Regresion,Registro de entrada y salida con notas,"1. Registrar entrada con obs A 2. Registrar salida con obs B",Obs A y Obs B se guardan en campos independientes,Ambas observaciones preservadas,Aprobado
+TC-REG-07,HU04,Regresion,Movimientos registrados,1. Consultar GET /api/movimientos con filtro de placa y estado,Retorna historial ordenado por fecha descendente,Historial filtrado correctamente,Aprobado
+TC-REG-08,HU02,Regresion,Movimientos en curso,1. Consultar GET /api/dashboard/summary,Indicadores de celdas y movimientos calculados,Metricas en tiempo real coherentes,Aprobado
+TC-REG-09,RNF04,Regresion,Datos persistidos en JSON,"1. Detener e iniciar servidor backend 2. Consultar entidades",Los datos y estados se mantienen intactos,Persistencia JSON verificada,Aprobado
+TC-REG-10,RNF05,Regresion,Permisos por rol configurado,1. Operar como Operador y como Administrador,Diferenciacion estricta de permisos comprobada,Comportamiento verificado en backend,Aprobado

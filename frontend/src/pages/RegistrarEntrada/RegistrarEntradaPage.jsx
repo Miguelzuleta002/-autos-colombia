@@ -211,7 +211,16 @@ export default function RegistrarEntradaPage() {
               <CeldaSelector
                 celdas={celdasLibres}
                 selectedId={selectedCelda?.id}
-                onSelect={(celda) => setSelectedCelda(celda)}
+                vehiculoTipo={vehiculo?.tipo}
+                onSelect={(celda, esCompatible) => {
+                  if (vehiculo && !esCompatible) {
+                    setNotification({
+                      type: 'warning',
+                      message: `Aviso de incompatibilidad (RF25): El vehículo "${vehiculo.placa}" es de tipo "${vehiculo.tipo}", mientras que la celda "${celda.codigo}" es para "${celda.tipo}". Te recomendamos seleccionar una celda para ${vehiculo.tipo} o de tipo GENERAL.`,
+                    });
+                  }
+                  setSelectedCelda(celda);
+                }}
               />
             )}
           </div>

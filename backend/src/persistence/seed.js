@@ -1,15 +1,16 @@
-// Datos iniciales (seed) para el parqueadero Autos Colombia
-// Solo crea los archivos si no existen, preservando datos entre reinicios
+// Datos iniciales (seed) y migraciones para Autos Colombia - Iteración 1 y 2
+// Preserva datos existentes y enriquece esquemas de forma idempotente
 
 import { v4 as uuidv4 } from 'uuid';
-import { fileExists, writeJsonFile } from './fileManager.js';
-import { FILE_PATHS, ESTADO_CELDA, ESTADO_MOVIMIENTO } from '../config/constants.js';
+import { fileExists, readJsonFile, writeJsonFile } from './fileManager.js';
+import { FILE_PATHS, ESTADO_CELDA, ESTADO_MOVIMIENTO, ROL_USUARIO, ESTADO_USUARIO } from '../config/constants.js';
 
 /**
- * Ejecuta la carga de datos iniciales.
- * Si los archivos JSON ya existen, no los sobreescribe.
+ * Ejecuta la carga de datos iniciales o migración idempotente.
  */
 export async function seed() {
+  const ahora = new Date().toISOString();
+
   // --- IDs predefinidos para mantener relaciones consistentes ---
   const clienteIds = {
     carlos: uuidv4(),
@@ -48,8 +49,8 @@ export async function seed() {
   celdaIds.c02 = uuidv4();
 
   const usuarioIds = {
-    operador: uuidv4(),
-    admin: uuidv4(),
+    operador: '527877e3-a9a4-486d-a367-2b274fecff67',
+    admin: '0832007f-e744-4eb7-aa89-9994b35e8974',
   };
 
   const movimientoIds = {
@@ -58,7 +59,7 @@ export async function seed() {
     mov3: uuidv4(),
   };
 
-  // --- Clientes ---
+  // --- 1. Clientes ---
   if (!(await fileExists(FILE_PATHS.CLIENTES))) {
     const clientes = [
       { id: clienteIds.carlos, nombre: 'Carlos Martínez', cedula: '1098765432', telefono: '3001234567', email: 'carlos.martinez@email.com' },
@@ -71,7 +72,7 @@ export async function seed() {
     console.log('✅ Datos de clientes creados');
   }
 
-  // --- Vehículos ---
+  // --- 2. Vehículos ---
   if (!(await fileExists(FILE_PATHS.VEHICULOS))) {
     const vehiculos = [
       { id: vehiculoIds.abc123, placa: 'ABC123', tipo: 'CARRO', marca: 'Chevrolet', modelo: 'Spark', color: 'Blanco', clienteId: clienteIds.carlos, activo: true },
@@ -87,7 +88,7 @@ export async function seed() {
     console.log('✅ Datos de vehículos creados');
   }
 
-  // --- Celdas ---
+  // --- 3. Celdas (con migración de atributos de Iteración 2) ---
   if (!(await fileExists(FILE_PATHS.CELDAS))) {
     const celdas = [];
 
@@ -99,7 +100,10 @@ export async function seed() {
         codigo,
         ubicacion: 'Piso 1 - Zona A',
         tipo: 'CARRO',
+        descripcion: 'Celda estándar para automóvil',
         estado: ESTADO_CELDA.LIBRE,
+        fechaCreacion: ahora,
+        fechaActualizacion: ahora,
       });
     }
 
@@ -111,7 +115,10 @@ export async function seed() {
         codigo,
         ubicacion: 'Piso 1 - Zona B',
         tipo: 'CARRO',
+        descripcion: 'Celda cubierta para automóvil',
         estado: ESTADO_CELDA.LIBRE,
+        fechaCreacion: ahora,
+        fechaActualizacion: ahora,
       });
     }
 
@@ -123,7 +130,10 @@ export async function seed() {
         codigo,
         ubicacion: 'Piso 1 - Zona Motos',
         tipo: 'MOTO',
+        descripcion: 'Espacio demarcado para motocicleta',
         estado: ESTADO_CELDA.LIBRE,
+        fechaCreacion: ahora,
+        fechaActualizacion: ahora,
       });
     }
 
@@ -133,14 +143,20 @@ export async function seed() {
       codigo: 'C-01',
       ubicacion: 'Piso 1 - Zona Camionetas',
       tipo: 'GENERAL',
+      descripcion: 'Celda amplia para camioneta o cualquier vehículo',
       estado: ESTADO_CELDA.LIBRE,
+      fechaCreacion: ahora,
+      fechaActualizacion: ahora,
     });
     celdas.push({
       id: celdaIds.c02,
       codigo: 'C-02',
       ubicacion: 'Piso 1 - Zona Camionetas',
       tipo: 'GENERAL',
+      descripcion: 'Celda amplia para camioneta o cualquier vehículo',
       estado: ESTADO_CELDA.LIBRE,
+      fechaCreacion: ahora,
+      fechaActualizacion: ahora,
     });
 
     // B-05 en MANTENIMIENTO para pruebas
@@ -155,28 +171,155 @@ export async function seed() {
 
     await writeJsonFile(FILE_PATHS.CELDAS, celdas);
     console.log('✅ Datos de celdas creados');
+  } else {
+    // Migración idempotente para enriquecer celdas existentes con campos de Iteración 2
+    const celdasExistentes = await readJsonFile(FILE_PATHS.CELDAS);
+    let modificado = false;
+    for (const c of celdasExistentes) {
+      if (!c.descripcion) {
+        c.descripcion = `Celda demarcada para vehículos tipo ${c.tipo || 'GENERAL'}`;
+        modificado = true;
+      }
+      if (!c.fechaCreacion) {
+        c.fechaCreacion = ahora;
+        modificado = true;
+      }
+      if (!c.fechaActualizacion) {
+        c.fechaActualizacion = ahora;
+        modificado = true;
+      }
+    }
+    if (modificado) {
+      await writeJsonFile(FILE_PATHS.CELDAS, celdasExistentes);
+      console.log('🔄 Celdas existentes actualizadas con esquema de Iteración 2');
+    }
   }
 
-  // --- Usuarios ---
+  // --- 4. Usuarios (con enriquecimiento de Iteración 2) ---
   if (!(await fileExists(FILE_PATHS.USUARIOS))) {
     const usuarios = [
-      { id: usuarioIds.operador, nombre: 'Carlos Ramírez', rol: 'OPERADOR', activo: true },
-      { id: usuarioIds.admin, nombre: 'Ana Morales', rol: 'ADMIN', activo: true },
+      {
+        id: usuarioIds.operador,
+        tipoDocumento: 'CC',
+        numeroDocumento: '1020304050',
+        nombres: 'Carlos',
+        apellidos: 'Ramírez',
+        nombre: 'Carlos Ramírez',
+        correo: 'carlos.ramirez@autoscolombia.com',
+        telefono: '3101234567',
+        rol: ROL_USUARIO.OPERADOR,
+        activo: true,
+        estado: ESTADO_USUARIO.ACTIVO,
+        fechaCreacion: ahora,
+        fechaActualizacion: ahora,
+      },
+      {
+        id: usuarioIds.admin,
+        tipoDocumento: 'CC',
+        numeroDocumento: '1030405060',
+        nombres: 'Ana',
+        apellidos: 'Morales',
+        nombre: 'Ana Morales',
+        correo: 'ana.morales@autoscolombia.com',
+        telefono: '3209876543',
+        rol: ROL_USUARIO.ADMINISTRADOR,
+        activo: true,
+        estado: ESTADO_USUARIO.ACTIVO,
+        fechaCreacion: ahora,
+        fechaActualizacion: ahora,
+      },
     ];
     await writeJsonFile(FILE_PATHS.USUARIOS, usuarios);
     console.log('✅ Datos de usuarios creados');
+  } else {
+    // Migración idempotente para usuarios existentes de Iteración 1
+    const usuariosExistentes = await readJsonFile(FILE_PATHS.USUARIOS);
+    let modificado = false;
+    for (const u of usuariosExistentes) {
+      if (!u.tipoDocumento) {
+        u.tipoDocumento = 'CC';
+        modificado = true;
+      }
+      if (!u.numeroDocumento) {
+        u.numeroDocumento = u.nombre?.includes('Ana') ? '1030405060' : '1020304050';
+        modificado = true;
+      }
+      if (!u.nombres) {
+        const partes = (u.nombre || '').split(' ');
+        u.nombres = partes[0] || 'Usuario';
+        u.apellidos = partes.slice(1).join(' ') || '';
+        modificado = true;
+      }
+      if (!u.correo) {
+        const base = u.nombres.toLowerCase();
+        u.correo = `${base}.${(u.apellidos || 'autos').toLowerCase().split(' ')[0]}@autoscolombia.com`;
+        modificado = true;
+      }
+      if (!u.telefono) {
+        u.telefono = '3101234567';
+        modificado = true;
+      }
+      if (u.rol === 'ADMIN') {
+        u.rol = ROL_USUARIO.ADMINISTRADOR;
+        modificado = true;
+      }
+      if (!u.estado) {
+        u.estado = u.activo ? ESTADO_USUARIO.ACTIVO : ESTADO_USUARIO.INACTIVO;
+        modificado = true;
+      }
+      if (!u.fechaCreacion) {
+        u.fechaCreacion = ahora;
+        modificado = true;
+      }
+      if (!u.fechaActualizacion) {
+        u.fechaActualizacion = ahora;
+        modificado = true;
+      }
+    }
+    if (modificado) {
+      await writeJsonFile(FILE_PATHS.USUARIOS, usuariosExistentes);
+      console.log('🔄 Usuarios existentes enriquecidos con esquema de Iteración 2');
+    }
   }
 
-  // --- Movimientos ---
+  // --- 5. Auditorías de celda (Iteración 2) ---
+  if (!(await fileExists(FILE_PATHS.AUDITORIAS_CELDA))) {
+    const auditorias = [
+      {
+        id: uuidv4(),
+        celdaId: '', // se vincula dinámicamente si existe B-05
+        codigoCelda: 'B-05',
+        accion: 'MANTENIMIENTO_INICIO',
+        usuarioResponsableId: usuarioIds.admin,
+        usuarioResponsableNombre: 'Ana Morales',
+        fecha: ahora,
+        motivo: 'Demarcación y pintura de señalización',
+        detalle: 'Pintura desgastada en líneas divisorias',
+      },
+    ];
+
+    // Vincular id real de B-05 si existe
+    if (await fileExists(FILE_PATHS.CELDAS)) {
+      const celdas = await readJsonFile(FILE_PATHS.CELDAS);
+      const b05 = celdas.find((c) => c.codigo === 'B-05');
+      if (b05) {
+        auditorias[0].celdaId = b05.id;
+      }
+    }
+
+    await writeJsonFile(FILE_PATHS.AUDITORIAS_CELDA, auditorias);
+    console.log('✅ Datos de auditoría de celdas creados');
+  }
+
+  // --- 6. Movimientos (Iteración 1) ---
   if (!(await fileExists(FILE_PATHS.MOVIMIENTOS))) {
-    const ahora = new Date();
-    const haceUnaHora = new Date(ahora.getTime() - 60 * 60 * 1000).toISOString();
-    const haceTresHoras = new Date(ahora.getTime() - 3 * 60 * 60 * 1000).toISOString();
-    const haceDosHoras = new Date(ahora.getTime() - 2 * 60 * 60 * 1000).toISOString();
-    const haceMediaHora = new Date(ahora.getTime() - 30 * 60 * 1000).toISOString();
+    const ahoraMs = Date.now();
+    const haceUnaHora = new Date(ahoraMs - 60 * 60 * 1000).toISOString();
+    const haceTresHoras = new Date(ahoraMs - 3 * 60 * 60 * 1000).toISOString();
+    const haceDosHoras = new Date(ahoraMs - 2 * 60 * 60 * 1000).toISOString();
+    const haceMediaHora = new Date(ahoraMs - 30 * 60 * 1000).toISOString();
 
     const movimientos = [
-      // Movimiento 1: ABC123 en A-01 (ABIERTO - el vehículo está dentro)
       {
         id: movimientoIds.mov1,
         vehiculoId: vehiculoIds.abc123,
@@ -189,7 +332,6 @@ export async function seed() {
         observacionSalida: null,
         estado: ESTADO_MOVIMIENTO.ABIERTO,
       },
-      // Movimiento 2: DEF456 entró y salió (CERRADO - historial)
       {
         id: movimientoIds.mov2,
         vehiculoId: vehiculoIds.def456,
@@ -202,7 +344,6 @@ export async function seed() {
         observacionSalida: 'Salida normal',
         estado: ESTADO_MOVIMIENTO.CERRADO,
       },
-      // Movimiento 3: MNO345 (moto) en M-01 (ABIERTO)
       {
         id: movimientoIds.mov3,
         vehiculoId: vehiculoIds.mno345,

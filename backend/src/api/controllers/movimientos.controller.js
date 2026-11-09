@@ -43,7 +43,7 @@ export const registrarEntrada = asyncHandler(async (req, res) => {
     placa,
     celdaId,
     observacionEntrada,
-    operadorId,
+    operadorId: operadorId || req.usuarioId,
   });
   res.status(201).json({ success: true, data: movimiento });
 });
@@ -57,7 +57,7 @@ export const registrarSalida = asyncHandler(async (req, res) => {
   const { observacionSalida, operadorId } = req.body;
   const movimiento = await movimientoService.registrarSalida(req.params.id, {
     observacionSalida,
-    operadorId,
+    operadorId: operadorId || req.usuarioId,
   });
   res.json({ success: true, data: movimiento });
 });

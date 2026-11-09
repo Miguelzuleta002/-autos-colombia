@@ -1,0 +1,346 @@
+/* Estilos para Gestión de Celdas - Autos Colombia (Iteración 1 y 2) */
+
+.celdas-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.celda-pill--lg {
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 4px 10px;
+}
+
+.celda-pill--xl {
+  font-size: 1.25rem;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background-color: #E6FFFA;
+  color: var(--primary);
+  border: 1px solid rgba(14, 159, 150, 0.3);
+}
+
+.type-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.type-tag--carro {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+}
+
+.type-tag--moto {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.type-tag--camioneta {
+  background-color: #FDF4FF;
+  color: #86198F;
+  border: 1px solid #F0ABFC;
+}
+
+.type-tag--general {
+  background-color: #F1F5F9;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+}
+
+.location-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.celda-status-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.celda-status--libre {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.celda-status--ocupada {
+  background-color: #E6FFFA;
+  color: #0E9F96;
+  border: 1px solid rgba(14, 159, 150, 0.3);
+}
+
+.celda-status--mantenimiento {
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.vehiculo-asociado-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vehiculo-mini-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.stay-mini-time {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  background-color: #FEF3C7;
+  color: #92400E;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.text-warning-muted {
+  color: #B45309;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.btn-icon--warning {
+  color: #D97706;
+}
+.btn-icon--warning:hover {
+  background-color: #FEF3C7;
+  color: #B45309;
+}
+
+.btn-icon--success {
+  color: #059669;
+}
+.btn-icon--success:hover {
+  background-color: #D1FAE5;
+  color: #047857;
+}
+
+.btn--warning-action {
+  background-color: #D97706;
+  color: #ffffff;
+}
+.btn--warning-action:hover {
+  background-color: #B45309;
+}
+
+/* Modal Detalle Celda */
+.celda-detail-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.detail-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.detail-loc-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.detail-desc-card {
+  background-color: #F8FAFC;
+  border: 1px solid var(--border-color);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+}
+
+.desc-title {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.detail-desc-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* Ocupación actual */
+.occupied-card {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+
+.occupied-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #15803D;
+  margin-bottom: 12px;
+}
+
+.occupied-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.occ-label {
+  font-size: 0.78rem;
+  color: #166534;
+  display: block;
+  font-weight: 500;
+}
+
+.occ-val {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.text-warning-bold {
+  color: #B45309;
+  font-weight: 700;
+}
+
+/* Auditoría de celdas (RF27) */
+.audit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.audit-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.no-audit-text {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-style: italic;
+  margin: 0;
+}
+
+.audit-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.audit-item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  background-color: #F8FAFC;
+  border: 1px solid var(--border-color);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.audit-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.audit-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.audit-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.audit-action-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background-color: #E2E8F0;
+  color: #334155;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.audit-date {
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.audit-motivo {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.audit-detalle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.audit-resp {
+  font-size: 0.72rem;
+  color: var(--text-light);
+}
+
+.input-readonly {
+  background-color: #F1F5F9;
+  cursor: not-allowed;
+  color: var(--text-secondary);
+}
+
+.confirm-alert-box--success {
+  background-color: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.confirm-alert-box--success h4 {
+  color: #047857;
+}
+
+.confirm-alert-box--success p {
+  color: #065F46;
+}

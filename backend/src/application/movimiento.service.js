@@ -20,14 +20,23 @@ async function resolverOperadorId(operadorId) {
     if (!operador) {
       throw new NotFoundError(`Operador con ID "${operadorId}" no encontrado`);
     }
+    if (!operador.activo && operador.estado !== 'ACTIVO') {
+      throw new ValidationError(`El usuario "${operador.nombre || operador.nombres}" se encuentra inactivo`);
+    }
     return operador.id;
   }
 
   const operadorDefault = await usuarioRepo.findDefaultOperador();
-  if (!operadorDefault) {
-    throw new NotFoundError('No se encontró un operador por defecto en el sistema');
+  if (operadorDefault) {
+    return operadorDefault.id;
   }
-  return operadorDefault.id;
+
+  const adminDefault = await usuarioRepo.findDefaultAdmin();
+  if (adminDefault) {
+    return adminDefault.id;
+  }
+
+  throw new NotFoundError('No se encontró un operador o usuario activo en el sistema');
 }
 
 /**
@@ -102,6 +111,19 @@ export async function registrarEntrada({ placa, celdaId, observacionEntrada, ope
 
   if (celda.estado !== ESTADO_CELDA.LIBRE) {
     throw new ConflictError(`La celda "${celda.codigo}" no está disponible (estado actual: ${celda.estado})`);
+  }
+
+  // Validar compatibilidad entre el tipo de vehículo y la celda (RF25)
+  const celdaTipo = (celda.tipo || '').toUpperCase().trim();
+  const vehiculoTipo = (vehiculo.tipo || '').toUpperCase().trim();
+  const esCompatible =
+    celdaTipo === 'GENERAL' ||
+    celdaTipo === vehiculoTipo;
+
+  if (!esCompatible) {
+    throw new ValidationError(
+      `Incompatibilidad: el vehículo "${vehiculo.placa}" es de tipo "${vehiculoTipo}", pero la celda "${celda.codigo}" es exclusiva para tipo "${celdaTipo}". Seleccione una celda compatible o de tipo GENERAL.`
+    );
   }
 
   // Resolver operador

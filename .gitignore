@@ -36,3 +36,6 @@ logs/
 # Datos generados en tiempo de ejecución (se auto-generan vía seed)
 backend/data/*.json
 !backend/data/.gitkeep
+
+# Pruebas externas de laboratorio de red
+cliente-lan/

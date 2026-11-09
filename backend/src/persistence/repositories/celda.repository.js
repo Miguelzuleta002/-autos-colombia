@@ -1,4 +1,4 @@
-// Repositorio de celdas - operaciones CRUD sobre celdas.json
+// Repositorio de celdas - operaciones CRUD sobre celdas.json (Iteración 1 y 2)
 
 import { readJsonFile, writeJsonFile } from '../fileManager.js';
 import { FILE_PATHS } from '../../config/constants.js';
@@ -22,6 +22,18 @@ export async function findById(id) {
 }
 
 /**
+ * Busca una celda por su código único (ej: "A-01").
+ * @param {string} codigo - Código de la celda
+ * @returns {Promise<object|null>} Celda encontrada o null
+ */
+export async function findByCodigo(codigo) {
+  if (!codigo) return null;
+  const codigoNorm = codigo.toUpperCase().trim();
+  const celdas = await findAll();
+  return celdas.find((c) => c.codigo.toUpperCase().trim() === codigoNorm) || null;
+}
+
+/**
  * Filtra celdas por estado.
  * @param {string} estado - Estado de celda (LIBRE, OCUPADA, MANTENIMIENTO)
  * @returns {Promise<Array>} Lista de celdas filtradas
@@ -29,6 +41,18 @@ export async function findById(id) {
 export async function findByEstado(estado) {
   const celdas = await findAll();
   return celdas.filter((c) => c.estado === estado);
+}
+
+/**
+ * Agrega una nueva celda a la colección.
+ * @param {object} nuevaCelda
+ * @returns {Promise<object>}
+ */
+export async function create(nuevaCelda) {
+  const celdas = await findAll();
+  celdas.push(nuevaCelda);
+  await saveAll(celdas);
+  return nuevaCelda;
 }
 
 /**
@@ -42,7 +66,11 @@ export async function updateById(id, updates) {
   const index = celdas.findIndex((c) => c.id === id);
   if (index === -1) return null;
 
-  celdas[index] = { ...celdas[index], ...updates };
+  celdas[index] = {
+    ...celdas[index],
+    ...updates,
+    fechaActualizacion: new Date().toISOString(),
+  };
   await saveAll(celdas);
   return celdas[index];
 }

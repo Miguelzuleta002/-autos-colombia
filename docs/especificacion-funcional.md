@@ -1,295 +1,107 @@
-# 📄 Especificación Funcional — Autos Colombia
+# 📋 Especificación Funcional — Autos Colombia
 
-**Versión:** 1.0  
-**Iteración:** 1  
-**Fecha:** Octubre 2026  
-**Estado:** Aprobado
-
----
-
-## 1. Visión General
-
-**Autos Colombia** es un sistema de gestión de parqueaderos por mensualidad que permite a los operadores registrar entradas y salidas de vehículos, controlar la ocupación de celdas, agregar observaciones sobre el estado de los vehículos y consultar el historial de movimientos.
-
-El sistema está orientado a parqueaderos que manejan clientes con suscripción mensual, donde los vehículos registrados pueden ingresar y salir libremente dentro de su periodo de vigencia.
-
-### 1.1 Objetivo del sistema
-
-Digitalizar y optimizar el proceso de control de acceso vehicular en un parqueadero, reemplazando registros manuales con una aplicación web intuitiva que permita:
-
-- Registrar entradas y salidas de forma ágil
-- Controlar la ocupación en tiempo real
-- Mantener un historial auditable de todos los movimientos
-- Documentar observaciones sobre el estado de los vehículos
-
-### 1.2 Contexto de negocio
-
-```mermaid
-flowchart LR
-    subgraph Parqueadero
-        OP["🧑 Operador"]
-        SIS["💻 Sistema Autos Colombia"]
-        CELDAS["🅿️ Celdas físicas"]
-    end
-    
-    VEH["🚗 Vehículo"] -->|Ingresa / Sale| OP
-    OP -->|Registra movimiento| SIS
-    SIS -->|Actualiza estado| CELDAS
-    SIS -->|Genera historial| HIST["📋 Historial"]
-```
+**Sistema de Gestión de Parqueadero por Mensualidad**  
+**Versión:** 2.0 (Iteraciones 1 y 2)  
+**Fecha:** Noviembre 2026  
 
 ---
 
-## 2. Alcance de la Iteración 1
+## 1. Alcance y Contexto General
 
-### 2.1 Incluido
-
-| Módulo | Funcionalidad |
-|--------|---------------|
-| Dashboard | Indicadores de ocupación, accesos rápidos, tabla de vehículos dentro |
-| Entradas | Búsqueda de vehículo por placa, selección de celda, observaciones, confirmación |
-| Salidas | Lista de vehículos dentro, detalle de estancia, observaciones de salida, confirmación |
-| Movimientos | Historial completo con filtros por placa, rango de fechas y estado |
-| Datos demo | Generación automática de datos ficticios al primer inicio |
-
-### 2.2 Excluido (futuras iteraciones)
-
-| Módulo | Justificación |
-|--------|---------------|
-| Gestión de pagos y mensualidades | Requiere definición de modelo financiero |
-| Autenticación de usuarios | Se implementará con JWT en iteración 2 |
-| Administración de clientes/vehículos | CRUD completo en iteración 2 |
-| Base de datos MySQL | Migración planificada; la arquitectura actual lo soporta |
+**Autos Colombia** es una plataforma web para la operación integral de parqueaderos por mensualidad.
+- **Iteración 1:** Gestión de ingresos, egresos, consulta de vehículos dentro, historial de movimientos, observaciones independientes e indicadores de ocupación.
+- **Iteración 2:** Gestión integral de usuarios (roles, estados, protección de administradores), gestión de celdas (compatibilidad, trazabilidad histórica) y control de mantenimiento de celdas.
 
 ---
 
-## 3. Requisitos Funcionales
+## 2. Requerimientos Funcionales
 
-### RF-01: Registrar entrada de vehículo
+### Iteración 1: Entradas, Salidas y Movimientos
+- **RF01:** Registrar la entrada de un vehículo previamente registrado y activo.
+- **RF02:** Consultar los vehículos que permanecen dentro del parqueadero en tiempo real.
+- **RF03:** Registrar la salida de un vehículo con una entrada abierta.
+- **RF04:** Asignar automáticamente la ocupación de una celda (`LIBRE` → `OCUPADA`) al registrar una entrada y liberarla (`OCUPADA` → `LIBRE`) al registrar la salida.
+- **RF05:** Consultar el historial de movimientos mediante filtros por placa, fechas y estado.
+- **RF06:** Guardar observaciones independientes durante la entrada y la salida.
+- **RF07:** Mostrar indicadores de ocupación, celdas libres, entradas de hoy y salidas de hoy.
+- **RF08:** Validar operaciones críticas y presentar mensajes de error comprensibles.
 
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RF-01 |
-| **Descripción** | El sistema debe permitir registrar la entrada de un vehículo al parqueadero, asociándolo a una celda disponible y registrando la fecha/hora de ingreso. |
-| **Actor** | Operador |
-| **Entrada** | Placa del vehículo, celda seleccionada, observaciones opcionales |
-| **Salida** | Movimiento creado con estado ABIERTO, celda marcada como OCUPADA |
-| **Reglas** | El vehículo debe existir y estar activo. No debe tener un movimiento abierto previo. La celda debe estar LIBRE y ser compatible con el tipo de vehículo. |
+### Iteración 2: Gestión de Usuarios
+- **RF09:** Listar todos los usuarios registrados en el sistema.
+- **RF10:** Buscar y filtrar usuarios por nombre, documento, correo, rol y estado.
+- **RF11:** Consultar los detalles completos de un usuario (incluyendo fechas de auditoría).
+- **RF12:** Registrar nuevos usuarios con tipo y número de documento, nombres, apellidos, correo, teléfono y rol.
+- **RF13:** Actualizar información personal, de contacto y reasignación de roles.
+- **RF14:** Activar y desactivar usuarios sin eliminar sus registros históricos.
+- **RF15:** Validar la unicidad de número de documento y correo electrónico en el backend.
+- **RF16:** Impedir desactivar o degradar al último Administrador activo y proteger al usuario demo actual.
 
-### RF-02: Registrar salida de vehículo
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RF-02 |
-| **Descripción** | El sistema debe permitir registrar la salida de un vehículo, cerrando el movimiento abierto y liberando la celda asignada. |
-| **Actor** | Operador |
-| **Entrada** | ID del movimiento abierto, observaciones opcionales de salida |
-| **Salida** | Movimiento actualizado con estado CERRADO, fecha/hora de salida y duración calculada. Celda marcada como LIBRE. |
-| **Reglas** | Solo se puede registrar salida para movimientos con estado ABIERTO. |
-
-### RF-03: Consultar vehículos dentro del parqueadero
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RF-03 |
-| **Descripción** | El sistema debe mostrar la lista de todos los vehículos que se encuentran actualmente dentro del parqueadero (movimientos abiertos). |
-| **Actor** | Operador |
-| **Salida** | Lista de movimientos abiertos con datos del vehículo, celda asignada y hora de entrada. |
-
-### RF-04: Consultar historial de movimientos
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RF-04 |
-| **Descripción** | El sistema debe permitir consultar el historial completo de entradas y salidas con capacidad de filtrado. |
-| **Actor** | Operador |
-| **Filtros disponibles** | Placa del vehículo (búsqueda parcial), rango de fechas (desde/hasta), estado del movimiento (ABIERTO/CERRADO) |
-| **Salida** | Lista paginada de movimientos ordenados por fecha descendente. |
-
-### RF-05: Buscar vehículos por placa
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RF-05 |
-| **Descripción** | El sistema debe permitir buscar vehículos registrados por su placa, soportando búsqueda parcial (contiene). |
-| **Actor** | Operador |
-| **Entrada** | Texto de búsqueda (mínimo 2 caracteres) |
-| **Salida** | Lista de vehículos que coinciden, incluyendo datos del propietario. |
-
-### RF-06: Consultar celdas por estado
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RF-06 |
-| **Descripción** | El sistema debe permitir consultar las celdas del parqueadero filtradas por estado. |
-| **Actor** | Operador |
-| **Filtros** | Estado: LIBRE, OCUPADA, MANTENIMIENTO |
-| **Salida** | Lista de celdas con su código, tipo, ubicación y estado actual. |
-
-### RF-07: Mostrar dashboard de ocupación
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RF-07 |
-| **Descripción** | El sistema debe presentar un resumen visual con indicadores de ocupación del parqueadero. |
-| **Actor** | Operador |
-| **Indicadores** | Total de celdas, celdas libres, celdas ocupadas, porcentaje de ocupación, vehículos dentro, movimientos del día. |
-
-### RF-08: Registrar observaciones de vehículos
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RF-08 |
-| **Descripción** | El sistema debe permitir registrar observaciones textuales tanto en la entrada como en la salida de un vehículo. |
-| **Actor** | Operador |
-| **Detalle** | Las observaciones de entrada y salida se almacenan de forma independiente dentro del mismo movimiento. Son opcionales. |
-| **Uso típico** | "Rayón en puerta trasera derecha", "Espejo lateral roto", "Sin novedades" |
+### Iteración 2: Gestión de Celdas y Mantenimiento
+- **RF17:** Listar el inventario total de celdas del parqueadero.
+- **RF18:** Buscar y filtrar celdas por código, ubicación, tipo/compatibilidad y estado.
+- **RF19:** Consultar detalle de cada celda, incluyendo vehículo ocupante (si aplica) e historial de mantenimiento.
+- **RF20:** Registrar nuevas celdas con código único, ubicación, tipo y descripción (inician en `LIBRE`).
+- **RF21:** Actualizar información de ubicación, tipo y descripción de celdas existentes.
+- **RF22:** Enviar celdas libres a estado `MANTENIMIENTO` registrando el motivo obligatorio.
+- **RF23:** Habilitar celdas en mantenimiento devolviéndolas al estado `LIBRE`.
+- **RF24:** Gestionar automáticamente la transición de ocupación con las entradas y salidas de la Iteración 1.
+- **RF25:** Validar compatibilidad entre el tipo de vehículo (`CARRO`, `MOTO`, `CAMIONETA`) y el tipo de celda.
+- **RF26:** Mostrar indicadores de celdas totales, libres, ocupadas y en mantenimiento.
+- **RF27:** Conservar la trazabilidad histórica de auditoría de los cambios de las celdas.
 
 ---
 
-## 4. Requisitos No Funcionales
+## 3. Requerimientos No Funcionales
 
-### RNF-01: Rendimiento
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RNF-01 |
-| **Descripción** | Las respuestas de la API deben procesarse en menos de 500 ms para las operaciones estándar. |
-| **Métrica** | Tiempo de respuesta p95 < 500 ms |
-
-### RNF-02: Usabilidad
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RNF-02 |
-| **Descripción** | La interfaz debe ser intuitiva y operable sin capacitación previa. Los flujos principales (entrada/salida) deben completarse en menos de 5 clics. |
-| **Métrica** | Flujo de entrada: ≤ 4 pasos. Flujo de salida: ≤ 3 pasos. |
-
-### RNF-03: Disponibilidad
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RNF-03 |
-| **Descripción** | El sistema debe estar disponible durante el horario de operación del parqueadero (6:00 AM — 10:00 PM). |
-| **Métrica** | Uptime ≥ 99% durante horario de operación. |
-
-### RNF-04: Mantenibilidad
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RNF-04 |
-| **Descripción** | El código debe seguir una arquitectura por capas que permita modificar la capa de persistencia sin afectar la lógica de negocio ni la interfaz de usuario. |
-| **Criterio** | Sustituir repositorios JSON por MySQL sin modificar servicios, controladores ni componentes React. |
-
-### RNF-05: Compatibilidad
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RNF-05 |
-| **Descripción** | La aplicación debe funcionar correctamente en los navegadores modernos más comunes. |
-| **Navegadores soportados** | Chrome 90+, Firefox 90+, Edge 90+, Safari 15+ |
-
-### RNF-06: Portabilidad de datos
-
-| Campo | Detalle |
-|-------|---------|
-| **ID** | RNF-06 |
-| **Descripción** | Los datos almacenados en archivos JSON deben poder migrarse a una base de datos relacional sin pérdida de información. |
-| **Criterio** | Modelo de datos diseñado con relaciones claras y esquema SQL definido como referencia futura. |
+- **RNF01 (Usabilidad y Responsive):** Interfaz intuitiva, adaptada a escritorio y dispositivos móviles con paleta institucional (#172A46, #0E9F96, #F5F7FB).
+- **RNF02 (Modularidad y Mantenibilidad):** Separación limpia en capas (Controladores, Servicios, Repositorios) desacopladas de la persistencia física.
+- **RNF03 (Validaciones en Servidor):** Validaciones obligatorias ejecutadas en el backend, evitando depender únicamente del frontend.
+- **RNF04 (Persistencia Atómica):** Persistencia en archivos JSON con control de concurrencia en memoria (Mutex) y escritura atómica temporal para evitar corrupción de datos.
+- **RNF05 (API REST Consistente):** Respuestas estándar en formato `{ success: boolean, data?: any, error?: { message, code } }` y códigos HTTP acordes a la semántica REST.
+- **RNF06 (Preparación para Escalabilidad):** Repositorios listos para sustitución futura por un ORM/SQL (MySQL) sin modificar componentes de React ni servicios de negocio.
 
 ---
 
-## 5. Actores del Sistema
+## 4. Actores y Matriz de Permisos
 
-```mermaid
-flowchart TD
-    subgraph Actores
-        OP["🧑 Operador del Parqueadero"]
-    end
-    
-    subgraph "Sistema Autos Colombia"
-        ENT["Registrar Entrada"]
-        SAL["Registrar Salida"]
-        CON["Consultar Vehículos Dentro"]
-        HIS["Consultar Historial"]
-        DASH["Ver Dashboard"]
-    end
-    
-    OP --> ENT
-    OP --> SAL
-    OP --> CON
-    OP --> HIS
-    OP --> DASH
-```
-
-### Operador del Parqueadero
-
-| Aspecto | Detalle |
-|---------|---------|
-| **Rol** | Usuario principal del sistema |
-| **Responsabilidades** | Registrar entradas y salidas, documentar observaciones, consultar ocupación e historial |
-| **Perfil técnico** | Conocimiento básico de computación; no requiere formación técnica |
-| **Frecuencia de uso** | Diaria, durante todo el horario de operación |
-
-> **Nota:** En esta iteración no existe autenticación. Se utiliza un operador de demostración (Carlos Ramírez) de forma automática. La gestión de usuarios se implementará en la iteración 2.
+| Módulo / Acción | Operador | Administrador |
+|-----------------|:--------:|:-------------:|
+| Consultar Dashboard y Resumen | ✅ | ✅ |
+| Registrar Entrada de Vehículo | ✅ | ✅ |
+| Registrar Salida de Vehículo | ✅ | ✅ |
+| Consultar Historial de Movimientos | ✅ | ✅ |
+| Consultar Disponibilidad de Celdas | ✅ | ✅ |
+| Ver Detalle de Celda y Vehículo Ocupante | ✅ | ✅ |
+| Crear Nueva Celda | ❌ | ✅ |
+| Editar Celda Existente | ❌ | ✅ |
+| Enviar Celda a Mantenimiento | ❌ | ✅ |
+| Habilitar Celda de Mantenimiento | ❌ | ✅ |
+| Consultar Módulo de Usuarios | ❌ | ✅ |
+| Crear, Editar y Activar/Desactivar Usuarios | ❌ | ✅ |
 
 ---
 
-## 6. Reglas de Negocio
+## 5. Reglas de Negocio
 
-| ID | Regla | Descripción |
-|----|-------|-------------|
-| RN-01 | **Vehículo activo** | Solo los vehículos con estado `activo: true` pueden ingresar al parqueadero. |
-| RN-02 | **Sin movimiento abierto** | Un vehículo no puede tener más de un movimiento abierto simultáneamente. Si ya está dentro, no puede registrar otra entrada. |
-| RN-03 | **Celda libre** | Solo se puede asignar una celda que esté en estado `LIBRE`. Las celdas en `MANTENIMIENTO` u `OCUPADA` no son seleccionables. |
-| RN-04 | **Compatibilidad celda-vehículo** | El tipo de celda debe ser compatible con el tipo de vehículo (ej: una moto no puede asignarse a una celda de camioneta y viceversa). |
-| RN-05 | **Celda se ocupa al entrar** | Al registrar una entrada, la celda seleccionada cambia automáticamente de `LIBRE` a `OCUPADA`. |
-| RN-06 | **Celda se libera al salir** | Al registrar una salida, la celda asociada al movimiento cambia automáticamente de `OCUPADA` a `LIBRE`. |
-| RN-07 | **Cálculo de duración** | Al registrar la salida, el sistema calcula automáticamente la duración de la estancia como la diferencia entre la hora de salida y la hora de entrada. |
-| RN-08 | **Observaciones independientes** | Las observaciones de entrada y salida se almacenan como campos separados dentro del movimiento. Ambas son opcionales. |
-| RN-09 | **Datos demo auto-generados** | Si no existen archivos de datos al iniciar el servidor, el sistema genera automáticamente un conjunto de datos de demostración realistas. |
+### Reglas de Usuarios
+1. **Roles permitidos:** `ADMINISTRADOR` y `OPERADOR`.
+2. **Unicidad:** Cada documento y correo debe ser único en la colección de usuarios.
+3. **Usuarios inactivos:** No pueden participar como operadores en nuevas entradas ni salidas.
+4. **No eliminación física:** Los usuarios no se eliminan físicamente; se desactivan para proteger el historial.
+5. **Protección del último Administrador:** No se puede desactivar ni degradar al único administrador activo.
+6. **Protección del usuario demo actual:** No se puede desactivar al usuario con el que se está interactuando.
+7. **Trazabilidad de movimientos:** Los movimientos anteriores conservan la referencia al operador original.
+8. **Fechas oficiales:** Las fechas de creación y actualización de usuarios se generan en el backend.
 
-### Diagrama de estados — Movimiento
-
-```mermaid
-stateDiagram-v2
-    [*] --> ABIERTO : Registrar entrada
-    ABIERTO --> CERRADO : Registrar salida
-    CERRADO --> [*]
-    
-    note right of ABIERTO
-        Vehículo dentro del parqueadero.
-        Celda en estado OCUPADA.
-    end note
-    
-    note right of CERRADO
-        Vehículo fuera del parqueadero.
-        Celda liberada (LIBRE).
-        Duración calculada.
-    end note
-```
-
-### Diagrama de estados — Celda
-
-```mermaid
-stateDiagram-v2
-    [*] --> LIBRE
-    LIBRE --> OCUPADA : Entrada registrada
-    OCUPADA --> LIBRE : Salida registrada
-    LIBRE --> MANTENIMIENTO : Marcar mantenimiento
-    MANTENIMIENTO --> LIBRE : Finalizar mantenimiento
-```
-
----
-
-## 7. Glosario
-
-| Término | Definición |
-|---------|-----------|
-| **Parqueadero** | Estacionamiento o parking. Instalación física donde se guardan los vehículos. |
-| **Celda** | Espacio individual dentro del parqueadero destinado a un vehículo. Tiene código, tipo y ubicación. |
-| **Movimiento** | Registro de una entrada y (opcionalmente) su correspondiente salida. Un movimiento ABIERTO indica que el vehículo está dentro. |
-| **Placa** | Matrícula o número de identificación del vehículo (formato colombiano). |
-| **Operador** | Persona encargada de gestionar las entradas y salidas en el parqueadero. |
-| **Mensualidad** | Modelo de negocio donde los clientes pagan una tarifa mensual por el servicio de parqueadero. |
-| **Observaciones** | Notas textuales opcionales que el operador registra sobre el estado del vehículo al ingresar o salir. |
+### Reglas de Celdas
+1. **Estados de celda:** `LIBRE`, `OCUPADA` y `MANTENIMIENTO`.
+2. **Estado inicial:** Toda celda nueva comienza obligatoriamente como `LIBRE`.
+3. **Ocupación automática:** Una entrada válida cambia la celda de `LIBRE` a `OCUPADA`.
+4. **Liberación automática:** Una salida válida cambia la celda de `OCUPADA` a `LIBRE`.
+5. **Transición manual a mantenimiento:** Solo se permite cambiar manualmente de `LIBRE` a `MANTENIMIENTO`.
+6. **Rehabilitación manual:** Solo se permite cambiar manualmente de `MANTENIMIENTO` a `LIBRE`.
+7. **Prohibición de liberación manual:** Nunca liberar manualmente una celda `OCUPADA` desde la administración.
+8. **Integridad histórica:** No eliminar físicamente celdas que posean historial de movimientos o auditorías.
+9. **Inmutabilidad en ocupación:** No se puede modificar el tipo/compatibilidad de una celda `OCUPADA`.
+10. **Compatibilidad:** El tipo de vehículo debe ser compatible con el tipo de celda (`CARRO` con `CARRO`/`GENERAL`, `MOTO` con `MOTO`/`GENERAL`, `CAMIONETA` con `CAMIONETA`/`GENERAL`).
+11. **Auditoría:** Todo cambio relevante (creación, edición, mantenimiento) genera un registro histórico en `AuditoriaCelda`.

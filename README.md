@@ -1,161 +1,187 @@
-# 🚗 Autos Colombia — Gestión de Parqueadero
+# 🚗 Autos Colombia — Sistema de Gestión de Parqueadero
 
-Sistema de gestión de entradas y salidas de vehículos para parqueaderos por mensualidad.
+Sistema web para la administración y operación de parqueaderos por mensualidad, desarrollado con **React + Vite** en el frontend, **Node.js + Express** en el backend y persistencia atómica en archivos JSON.
 
-## 📋 Descripción
+---
 
-**Autos Colombia** es una aplicación web diseñada para operadores de parqueaderos que necesitan gestionar el ingreso y egreso de vehículos, controlar la ocupación de celdas, registrar observaciones sobre el estado de los vehículos y consultar el historial de movimientos.
+## 📋 Alcance del Proyecto
 
-### Iteración 1 — Alcance
+### ✅ Iteración 1 — Gestión de Entradas, Salidas y Movimientos
+- Registro de entradas con asignación automática de celda libre.
+- Consulta de vehículos actualmente dentro del parqueadero en tiempo real.
+- Registro de salida con cálculo de tiempo de estancia y liberación inmediata de la celda.
+- Observaciones de entrada y salida independientes (la salida nunca sobreescribe la de entrada).
+- Historial de movimientos con filtros combinados por placa, fechas y estado (`ABIERTO` / `CERRADO`).
+- Dashboard con indicadores de ocupación, celdas libres, entradas y salidas del día.
+- Validaciones completas y robustas en el backend.
 
-Esta primera versión incluye:
-- ✅ Registro de entradas de vehículos
-- ✅ Registro de salidas de vehículos
-- ✅ Consulta de vehículos dentro del parqueadero
-- ✅ Asignación y liberación automática de celdas
-- ✅ Observaciones independientes en entrada y salida
-- ✅ Historial de movimientos con filtros
-- ✅ Dashboard con indicadores de ocupación
-- ✅ Validaciones completas en frontend y backend
+### ✅ Iteración 2 — Gestión de Usuarios y Gestión de Celdas
+- **Gestión de Usuarios:**
+  - Consulta y búsqueda predictiva por nombre, documento o correo.
+  - Filtros por rol (`ADMINISTRADOR`, `OPERADOR`) y estado (`ACTIVO`, `INACTIVO`).
+  - Registro de usuarios con validación de unicidad de documento y correo.
+  - Actualización de información personal y reasignación de roles.
+  - Activación y desactivación de usuarios (conservando la integridad del historial).
+  - Reglas de seguridad: protección del usuario demo actual y del último Administrador activo.
+- **Gestión de Celdas y Mantenimiento:**
+  - Inventario de celdas con visualización de vehículo ocupante y tiempo de estancia.
+  - Filtros por código, ubicación, tipo/compatibilidad y estado.
+  - Registro de nuevas celdas (inician en estado `LIBRE`).
+  - Actualización de ubicación, compatibilidad y descripción.
+  - Control de mantenimiento: transición de `LIBRE` a `MANTENIMIENTO` y de `MANTENIMIENTO` a `LIBRE` con registro obligatorio de motivo.
+  - Prohibición de liberar manualmente celdas ocupadas desde la administración.
+  - Validación de compatibilidad entre tipo de vehículo (`CARRO`, `MOTO`, `CAMIONETA`) y tipo de celda (`CARRO`, `MOTO`, `CAMIONETA`, `GENERAL`).
+  - Trazabilidad histórica completa con cronología de auditoría de cada celda.
+- **Control de Roles y Sesión Demo:**
+  - Rol **Administrador:** acceso total a todos los módulos.
+  - Rol **Operador:** acceso a Resumen, Entradas, Salidas, Movimientos y consulta de Celdas (sin permisos de edición ni gestión de usuarios).
+  - Selector interactivo en la barra lateral para alternar en caliente entre Administrador y Operador en desarrollo local.
 
-**No incluye** (previsto para iteraciones posteriores):
-- ❌ Gestión de pagos y mensualidades
-- ❌ Autenticación de usuarios
-- ❌ Administración de clientes y vehículos
-- ❌ Base de datos MySQL
+---
 
 ## 🏗️ Arquitectura
 
 ```
-Frontend (React + Vite) → API REST (Express) → Servicios → Repositorios → Archivos JSON
+Frontend (React + Vite) → API REST (Express) → Controladores → Servicios → Repositorios → Archivos JSON
 ```
 
-### Estructura del proyecto
+### Estructura del Repositorio
 
 ```
-autos-colombia/
-├── README.md
-├── docs/                          # Documentación funcional
-│   ├── especificacion-funcional.md
-│   ├── historias-usuario.md
-│   ├── casos-uso.md
-│   ├── arquitectura.md
-│   ├── modelo-datos.md
-│   └── api-reference.md
-├── backend/
+├── .env.example                     # Variables de entorno de ejemplo
+├── package.json                     # Scripts unificados en la raíz
+├── start-dev.js                     # Script para iniciar backend y frontend concurrentemente
+├── README.md                        # Documentación principal
+├── docs/                            # Documentación técnica completa
+│   ├── especificacion-funcional.md  # RF01-RF27, RNF01-RNF06 y reglas de negocio
+│   ├── historias-usuario.md         # HU01-HU14 con criterios de aceptación
+│   ├── casos-uso.md                 # Casos de uso y diagramas Mermaid
+│   ├── arquitectura.md              # Arquitectura en capas y diagramas de secuencia
+│   ├── modelo-datos.md              # Modelo conceptual, ER Mermaid y DDL futuro MySQL
+│   ├── api-reference.md             # Referencia de todos los endpoints REST
+│   ├── plan_pruebas_iteracion_2.md  # Matriz de 34 casos de prueba ejecutados
+│   └── plan_pruebas_iteracion_2.csv # Versión CSV del plan de pruebas
+│
+├── backend/                         # Servidor Node.js + Express
+│   ├── .env.example
 │   ├── package.json
-│   ├── data/                      # Almacenamiento JSON (auto-generado)
+│   ├── test-direct.js               # Suite automatizada de 37 pruebas unitarias/integración
+│   ├── data/                        # Persistencia JSON atómica (auto-gestionada)
+│   │   ├── clientes.json
+│   │   ├── vehiculos.json
+│   │   ├── celdas.json
+│   │   ├── usuarios.json
+│   │   ├── movimientos.json
+│   │   └── auditorias_celda.json
 │   └── src/
-│       ├── index.js               # Punto de entrada
-│       ├── app.js                 # Configuración Express
-│       ├── config/                # Constantes
-│       ├── api/                   # Rutas, controladores, middlewares
-│       ├── application/           # Servicios de negocio
-│       ├── domain/                # Entidades y errores
-│       └── persistence/           # Repositorios y gestión de archivos
-└── frontend/
+│       ├── index.js                 # Punto de entrada (Puerto 3001)
+│       ├── app.js                   # Configuración de Express, CORS y rutas
+│       ├── config/constants.js      # Enums y constantes del sistema
+│       ├── domain/                  # Fábricas de entidades y errores personalizados
+│       ├── persistence/             # FileManager con Mutex y repositorios desacoplados
+│       ├── application/             # Lógica de negocio (MovimientoService, UsuarioService, CeldaService)
+│       └── api/                     # Controladores, rutas y middlewares de autorización
+│
+└── frontend/                        # Aplicación React 18 + Vite
     ├── package.json
-    ├── vite.config.js
+    ├── vite.config.js               # Proxy hacia backend en http://localhost:3001
     └── src/
-        ├── main.jsx
-        ├── App.jsx
-        ├── api/                   # Cliente API
-        ├── hooks/                 # Hooks personalizados
-        ├── components/            # Componentes reutilizables
-        └── pages/                 # Páginas de la aplicación
+        ├── main.jsx                 # Entry point con BrowserRouter
+        ├── App.jsx                  # Layout y enrutador principal
+        ├── context/AuthContext.jsx  # Proveedor de sesión y roles demo
+        ├── api/client.js            # Cliente HTTP estructurado hacia la API
+        ├── components/
+        │   ├── layout/              # Sidebar (#172A46, responsive, selector de roles)
+        │   ├── ui/                  # StatCard, Badge, Modal, Alert, SearchInput, etc.
+        │   └── shared/              # CeldaSelector con compatibilidad, MovimientosTable, VehiculoInfo
+        └── pages/                   # Vistas principales
+            ├── Resumen/             # Dashboard con indicadores y vehículos dentro
+            ├── RegistrarEntrada/    # Búsqueda, compatibilidad y registro de entrada
+            ├── RegistrarSalida/     # Salida, cálculo de estancia y liberación de celda
+            ├── Movimientos/         # Historial y filtros
+            ├── Celdas/              # Gestión de celdas, mantenimiento y auditoría
+            └── Usuarios/            # Gestión de usuarios, roles y estados (solo Admin)
 ```
 
-## 🛠️ Tecnologías
+---
+
+## 🛠️ Tecnologías Utilizadas
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | React 18, Vite 5, React Router 6, Lucide Icons |
-| Backend | Node.js, Express 4 |
-| Comunicación | API REST (JSON) |
-| Almacenamiento | Archivos JSON en disco |
-| Estilos | CSS personalizado (sin frameworks) |
+| **Frontend** | React 18, Vite 5, React Router 6, Lucide Icons |
+| **Backend** | Node.js (ES Modules), Express 4 |
+| **Persistencia** | JSON atómico en disco con control de concurrencia en memoria (Mutex) |
+| **Estilos** | CSS moderno organizado, variables CSS y diseño responsive |
+| **Pruebas** | Suite automatizada en Node.js (37 pruebas de reglas de negocio) |
 
-## 📦 Requisitos previos
+---
 
-- **Node.js** v18 o superior
-- **npm** v9 o superior
+## 📦 Requisitos Previos
 
-## 🚀 Instalación y ejecución
+- **Node.js** v18 o superior instalado.
+- **npm** v9 o superior.
 
-### 1. Clonar o descargar el proyecto
+---
 
+## 🚀 Instalación y Ejecución
+
+### 1. Clonar o ubicarse en la carpeta del proyecto
 ```bash
-git clone <url-del-repositorio>
-cd autos-colombia
+cd "c:\Users\migue\Downloads\Nueva carpeta"
 ```
 
-### 2. Instalar dependencias del backend
-
+### 2. Instalar dependencias
+Puedes instalar todas las dependencias con el comando en la raíz:
 ```bash
-cd backend
-npm install
+npm run install:all
 ```
+*(O ejecutar `npm install` dentro de `backend` y `frontend` por separado).*
 
-### 3. Instalar dependencias del frontend
-
+### 3. Iniciar Backend y Frontend simultáneamente
+Desde la raíz del proyecto, ejecuta:
 ```bash
-cd frontend
-npm install
-```
-
-### 4. Ejecutar el backend
-
-```bash
-cd backend
 npm run dev
 ```
+Este comando levantará concurrentemente:
+- **Backend API:** `http://localhost:3001` (con auto-recarga y seed inicial).
+- **Frontend Web:** `http://localhost:5173`.
 
-El servidor se inicia en `http://localhost:3001`. En el primer inicio, se crean automáticamente los datos de demostración en la carpeta `data/`.
+---
 
-### 5. Ejecutar el frontend (en otra terminal)
+## 👤 Usuario de Demostración y Roles
+
+El sistema implementa un mecanismo de demostración local **sin contraseñas**:
+- **Administrador predeterminado:** Ana Morales (`0832007f-e744-4eb7-aa89-9994b35e8974`).
+- **Operador predeterminado:** Carlos Ramírez (`527877e3-a9a4-486d-a367-2b274fecff67`).
+
+### Cómo alternar entre roles:
+1. **Directamente en la interfaz:** En la parte inferior de la barra lateral (Sidebar), utiliza el selector desplegable **"Cambiar usuario demo"** para alternar al instante entre **Ana Morales (Admin)** y **Carlos Ramírez (Operador)**.
+2. **Mediante variable de entorno:** En `backend/.env`, configura:
+   ```env
+   DEMO_USER_ID=0832007f-e744-4eb7-aa89-9994b35e8974
+   ```
+
+> ⚠️ **Aviso de seguridad:** Este mecanismo es exclusivamente para desarrollo local y fines académicos. No constituye un sistema de autenticación de producción.
+
+---
+
+## 🧪 Ejecución de Pruebas Automatizadas
+
+Para ejecutar la suite automatizada de pruebas de reglas de negocio y regresión:
 
 ```bash
-cd frontend
-npm run dev
+npm test
 ```
+*(O `npm test --prefix backend`)*
 
-La aplicación se abre en `http://localhost:5173`.
+**Resultado obtenido:**
+`TOTAL DE PRUEBAS AUTOMATIZADAS: 37 PASADAS, 0 FALLADAS`
 
-## 🔑 Datos de demostración
+---
 
-El sistema se inicializa con datos ficticios para facilitar las pruebas:
+## 📄 Limitaciones Conocidas
 
-- **5 clientes** con datos colombianos realistas
-- **8 vehículos** (6 activos, 1 inactivo para probar validaciones)
-- **20 celdas** (carros, motos, camionetas; una en mantenimiento)
-- **2 usuarios** (operador de demostración: Carlos Ramírez)
-- **Movimientos de ejemplo** (abiertos y cerrados)
-
-> ⚠️ El operador de demostración se utiliza automáticamente. No representa autenticación real; la gestión de usuarios se implementará en una iteración posterior.
-
-## 📱 Pantallas
-
-1. **Resumen** — Dashboard con indicadores, accesos rápidos y tabla de vehículos dentro.
-2. **Registrar Entrada** — Búsqueda de vehículo, selección de celda, observaciones y confirmación.
-3. **Registrar Salida** — Lista de vehículos dentro, detalle de estancia y confirmación de salida.
-4. **Movimientos** — Historial completo con filtros por placa, fechas y estado.
-
-## 🔌 API REST
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/health` | Estado del servidor |
-| GET | `/api/dashboard/summary` | Indicadores del parqueadero |
-| GET | `/api/vehiculos?placa=` | Buscar vehículos por placa |
-| GET | `/api/celdas?estado=LIBRE` | Consultar celdas por estado |
-| GET | `/api/movimientos/abiertos` | Vehículos dentro (movimientos abiertos) |
-| GET | `/api/movimientos` | Historial con filtros |
-| GET | `/api/movimientos/:id` | Detalle de un movimiento |
-| POST | `/api/movimientos/entrada` | Registrar entrada |
-| POST | `/api/movimientos/:id/salida` | Registrar salida |
-
-## 📝 Notas
-
-- Los datos se almacenan en archivos JSON en `backend/data/`. Si se eliminan, se regeneran al reiniciar el servidor.
-- Para reiniciar con datos limpios, basta con eliminar la carpeta `backend/data/` y reiniciar.
-- La arquitectura está preparada para sustituir los repositorios JSON por MySQL sin modificar los componentes de React ni la lógica de negocio.
+1. **Persistencia JSON:** Los archivos JSON son almacenamiento temporal para desarrollo local y no una base de datos para entornos multi-instancia en producción. La arquitectura por repositorios permite sustituir esta capa por MySQL sin tocar la lógica de negocio ni la UI.
+2. **Autenticación:** No se solicitan ni almacenan contraseñas; el control de acceso se basa en el usuario demo activo en el contexto.
+3. **Módulos futuros:** Los pagos, mensualidades y facturación detallada quedan previstos para iteraciones posteriores.

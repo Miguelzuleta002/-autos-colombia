@@ -1,227 +1,193 @@
 # 📖 Historias de Usuario — Autos Colombia
 
-**Versión:** 1.0  
-**Iteración:** 1  
-**Fecha:** Octubre 2026
+**Versión:** 2.0  
+**Iteraciones:** 1 y 2  
+**Fecha:** Noviembre 2026
 
 ---
 
-## Resumen de Historias
+## Resumen de Historias de Usuario
 
-| ID | Título | Prioridad | Estado |
-|----|--------|-----------|--------|
-| HU-01 | Registrar entrada de vehículo | 🔴 Alta | Implementada |
-| HU-02 | Registrar salida de vehículo | 🔴 Alta | Implementada |
-| HU-03 | Consultar vehículos dentro del parqueadero | 🔴 Alta | Implementada |
-| HU-04 | Consultar historial de movimientos | 🟡 Media | Implementada |
-| HU-05 | Ver dashboard de ocupación | 🟡 Media | Implementada |
-| HU-06 | Registrar observaciones de vehículos | 🟢 Baja | Implementada |
+| ID | Título | Rol Principal | Iteración | Estado |
+|----|--------|---------------|-----------|--------|
+| **HU01** | Registrar entrada de vehículo | Operador / Administrador | Iteración 1 | ✅ Implementada |
+| **HU02** | Consultar vehículos dentro del parqueadero | Operador / Administrador | Iteración 1 | ✅ Implementada |
+| **HU03** | Registrar salida de vehículo | Operador / Administrador | Iteración 1 | ✅ Implementada |
+| **HU04** | Consultar historial de movimientos | Operador / Administrador | Iteración 1 | ✅ Implementada |
+| **HU05** | Registrar observaciones independientes | Operador / Administrador | Iteración 1 | ✅ Implementada |
+| **HU06** | Validar operaciones y mostrar errores | Operador / Administrador | Iteración 1 | ✅ Implementada |
+| **HU07** | Consultar y buscar usuarios | Administrador | Iteración 2 | ✅ Implementada |
+| **HU08** | Registrar usuario | Administrador | Iteración 2 | ✅ Implementada |
+| **HU09** | Actualizar usuario y rol | Administrador | Iteración 2 | ✅ Implementada |
+| **HU10** | Activar o desactivar usuario | Administrador | Iteración 2 | ✅ Implementada |
+| **HU11** | Consultar y filtrar celdas | Administrador / Operador | Iteración 2 | ✅ Implementada |
+| **HU12** | Registrar celda | Administrador | Iteración 2 | ✅ Implementada |
+| **HU13** | Actualizar información de celda | Administrador | Iteración 2 | ✅ Implementada |
+| **HU14** | Gestionar mantenimiento de celdas | Administrador | Iteración 2 | ✅ Implementada |
 
 ---
 
-## HU-01: Registrar entrada de vehículo
+## Iteración 1 — Gestión de Entradas, Salidas y Movimientos
 
+### HU01: Registrar entrada de vehículo
 **Como** operador del parqueadero,  
-**quiero** registrar la entrada de un vehículo buscándolo por placa y asignándole una celda disponible,  
-**para** llevar un control preciso de los vehículos que se encuentran dentro del parqueadero.
+**quiero** buscar un vehículo por su placa, consultar sus datos, asignarle una celda libre y registrar su entrada,  
+**para** conocer su ubicación exacta dentro de las instalaciones.
 
-### Criterios de aceptación
+**Criterios de aceptación:**
+- [x] El vehículo debe existir en el registro y encontrarse activo.
+- [x] Si el vehículo ya tiene una entrada abierta, el sistema impide la operación con mensaje explicativo.
+- [x] Se valida la disponibilidad de la celda seleccionada (estado `LIBRE`).
+- [x] Se valida la compatibilidad entre el tipo de vehículo y el tipo de celda (RF25).
+- [x] Se registra la fecha y hora oficial generada por el backend y el operador responsable.
+- [x] Permite registrar una observación opcional de entrada.
+- [x] Al registrar, la celda pasa automáticamente a estado `OCUPADA`.
 
-- [ ] El operador puede buscar un vehículo ingresando al menos 2 caracteres de la placa.
-- [ ] El sistema muestra los vehículos que coinciden con la búsqueda, incluyendo placa, tipo, marca, modelo, color y nombre del propietario.
-- [ ] Solo se muestran vehículos con estado activo.
-- [ ] Si el vehículo ya tiene un movimiento abierto, el sistema muestra un mensaje de error indicando que ya se encuentra dentro del parqueadero.
-- [ ] El operador puede seleccionar una celda de la lista de celdas libres compatibles con el tipo de vehículo.
-- [ ] El operador puede agregar observaciones opcionales sobre el estado del vehículo.
-- [ ] Al confirmar, el sistema crea un movimiento con estado ABIERTO y marca la celda como OCUPADA.
-- [ ] El sistema muestra un mensaje de confirmación con el resumen de la entrada registrada.
-
-### Prioridad
-
-🔴 **Alta** — Funcionalidad esencial para la operación del parqueadero.
-
-### Requisitos relacionados
-
-- RF-01: Registrar entrada de vehículo
-- RF-05: Buscar vehículos por placa
-- RF-06: Consultar celdas por estado
-- RF-08: Registrar observaciones de vehículos
-- RN-01, RN-02, RN-03, RN-04, RN-05
-
----
-
-## HU-02: Registrar salida de vehículo
-
+### HU02: Consultar vehículos dentro
 **Como** operador del parqueadero,  
-**quiero** registrar la salida de un vehículo que se encuentra dentro del parqueadero,  
-**para** liberar la celda asignada y cerrar el registro del movimiento con la duración de la estancia.
+**quiero** visualizar los vehículos que permanecen dentro,  
+**para** conocer la ocupación en tiempo real y localizar cualquier vehículo.
 
-### Criterios de aceptación
+**Criterios de aceptación:**
+- [x] Lista únicamente movimientos con estado `ABIERTO`.
+- [x] Muestra placa, vehículo (marca, modelo, color), celda asignada, hora de ingreso y observación.
+- [x] Permite filtrar y buscar vehículos en tiempo real por placa.
 
-- [ ] El sistema muestra la lista de vehículos que se encuentran actualmente dentro del parqueadero (movimientos abiertos).
-- [ ] Cada elemento de la lista muestra: placa, tipo de vehículo, celda asignada, hora de entrada y tiempo transcurrido.
-- [ ] El operador puede seleccionar un vehículo para registrar su salida.
-- [ ] Al seleccionar, el sistema muestra el detalle completo del movimiento: datos del vehículo, celda, hora de entrada, observaciones de entrada y duración actual.
-- [ ] El operador puede agregar observaciones opcionales de salida.
-- [ ] Al confirmar la salida, el sistema cierra el movimiento (estado CERRADO), registra la hora de salida, calcula la duración y libera la celda (estado LIBRE).
-- [ ] El sistema muestra un mensaje de confirmación con el resumen de la salida registrada.
-
-### Prioridad
-
-🔴 **Alta** — Funcionalidad esencial para la operación del parqueadero.
-
-### Requisitos relacionados
-
-- RF-02: Registrar salida de vehículo
-- RF-03: Consultar vehículos dentro del parqueadero
-- RF-08: Registrar observaciones de vehículos
-- RN-06, RN-07, RN-08
-
----
-
-## HU-03: Consultar vehículos dentro del parqueadero
-
+### HU03: Registrar salida de vehículo
 **Como** operador del parqueadero,  
-**quiero** ver una lista actualizada de todos los vehículos que se encuentran actualmente dentro del parqueadero,  
-**para** conocer la ocupación actual y poder ubicar rápidamente cualquier vehículo.
+**quiero** localizar un vehículo dentro del parqueadero y registrar su salida,  
+**para** cerrar su estancia y liberar automáticamente la celda asignada.
 
-### Criterios de aceptación
+**Criterios de aceptación:**
+- [x] Solo permite registrar salida si existe un movimiento abierto.
+- [x] Muestra el resumen de la estancia y el tiempo transcurrido.
+- [x] Registra fecha, hora y operador de salida.
+- [x] Permite registrar una observación de salida independiente.
+- [x] El movimiento pasa a estado `CERRADO` y la celda vuelve automáticamente a `LIBRE`.
 
-- [ ] El sistema muestra una tabla con todos los movimientos abiertos (vehículos dentro).
-- [ ] Cada fila muestra: placa, tipo de vehículo, marca y modelo, celda asignada, hora de entrada y tiempo transcurrido.
-- [ ] La tabla se ordena por hora de entrada (más reciente primero).
-- [ ] Si no hay vehículos dentro, el sistema muestra un mensaje indicándolo.
-- [ ] La información se puede refrescar manualmente o se actualiza al navegar a la vista.
+### HU04: Consultar historial de movimientos
+**Como** operador o administrador,  
+**quiero** consultar las entradas y salidas anteriores mediante filtros,  
+**para** revisar el historial de estancias de cualquier vehículo.
 
-### Prioridad
+**Criterios de aceptación:**
+- [x] Filtros por placa, rango de fechas (desde/hasta) y estado (`ABIERTO`/`CERRADO`).
+- [x] Diferencia visual clara entre movimientos abiertos y cerrados.
+- [x] Muestra celdas, operadores y permite consultar el detalle completo con observaciones.
 
-🔴 **Alta** — Necesaria para la visibilidad en tiempo real de la ocupación.
-
-### Requisitos relacionados
-
-- RF-03: Consultar vehículos dentro del parqueadero
-- RF-07: Mostrar dashboard de ocupación
-
----
-
-## HU-04: Consultar historial de movimientos
-
+### HU05: Registrar observaciones independientes
 **Como** operador del parqueadero,  
-**quiero** consultar el historial de todos los movimientos (entradas y salidas) con filtros de búsqueda,  
-**para** auditar la actividad del parqueadero y buscar movimientos específicos.
+**quiero** registrar novedades durante el ingreso y el egreso,  
+**para** conservar constancia del estado físico del vehículo.
 
-### Criterios de aceptación
+**Criterios de aceptación:**
+- [x] Las observaciones de entrada y salida son campos independientes.
+- [x] La observación de salida nunca sobreescribe ni modifica la de entrada.
 
-- [ ] El sistema muestra una tabla con todos los movimientos, ordenados por fecha de entrada descendente.
-- [ ] Cada fila muestra: placa, tipo de vehículo, celda, fecha/hora de entrada, fecha/hora de salida (si aplica), duración, estado (ABIERTO/CERRADO) y un indicador visual del estado.
-- [ ] El operador puede filtrar por placa (búsqueda parcial, no sensible a mayúsculas/minúsculas).
-- [ ] El operador puede filtrar por rango de fechas (fecha desde y fecha hasta).
-- [ ] El operador puede filtrar por estado del movimiento (ABIERTO, CERRADO o todos).
-- [ ] Los filtros se pueden combinar entre sí.
-- [ ] El operador puede limpiar todos los filtros con un solo clic.
-- [ ] Si no hay resultados, el sistema muestra un mensaje indicándolo.
-
-### Prioridad
-
-🟡 **Media** — Importante para auditoría pero no bloquea la operación diaria.
-
-### Requisitos relacionados
-
-- RF-04: Consultar historial de movimientos
-
----
-
-## HU-05: Ver dashboard de ocupación
-
+### HU06: Validar operaciones y mostrar errores
 **Como** operador del parqueadero,  
-**quiero** ver un resumen visual con los indicadores principales de ocupación del parqueadero,  
-**para** tener una visión rápida del estado actual sin necesidad de navegar a otras pantallas.
+**quiero** recibir mensajes comprensibles y oportunos cuando una operación no proceda,  
+**para** corregir inconsistencias y conservar la integridad de los datos.
 
-### Criterios de aceptación
-
-- [ ] El dashboard muestra las siguientes tarjetas con indicadores:
-  - Total de celdas del parqueadero
-  - Celdas libres (con cantidad y color verde)
-  - Celdas ocupadas (con cantidad y color indicativo)
-  - Porcentaje de ocupación
-  - Vehículos actualmente dentro
-  - Movimientos del día (entradas registradas hoy)
-- [ ] El dashboard incluye accesos rápidos (botones) a las funciones principales: Registrar Entrada y Registrar Salida.
-- [ ] El dashboard incluye una tabla resumen de los vehículos que se encuentran dentro del parqueadero.
-- [ ] Los indicadores se actualizan al cargar la página.
-
-### Prioridad
-
-🟡 **Media** — Mejora significativa en la experiencia del usuario, pero el sistema funciona sin ella.
-
-### Requisitos relacionados
-
-- RF-07: Mostrar dashboard de ocupación
-- RF-03: Consultar vehículos dentro del parqueadero
+**Criterios de aceptación:**
+- [x] Impide entradas duplicadas, vehículos inexistentes o inactivos, y celdas no disponibles.
+- [x] Si una operación falla, no se generan estados parciales ni contradictorios (rollback).
 
 ---
 
-## HU-06: Registrar observaciones de vehículos
+## Iteración 2 — Gestión de Usuarios y Gestión de Celdas
 
-**Como** operador del parqueadero,  
-**quiero** poder registrar observaciones sobre el estado del vehículo tanto al momento de la entrada como al momento de la salida,  
-**para** documentar cualquier novedad (rayones, golpes, objetos dejados) y tener un registro que evite disputas con los clientes.
+### HU07: Consultar y buscar usuarios
+**Como** Administrador,  
+**quiero** consultar y filtrar los usuarios del sistema,  
+**para** localizar su información, roles y estados de actividad.
 
-### Criterios de aceptación
+**Criterios de aceptación:**
+- [x] Visualiza nombres, apellidos, tipo y número de documento, correo, teléfono, rol y estado.
+- [x] Búsqueda predictiva por nombre, documento o correo electrónico.
+- [x] Filtros por rol (`ADMINISTRADOR`, `OPERADOR`) y estado (`ACTIVO`, `INACTIVO`).
+- [x] Modal de consulta de detalle completo con fechas de creación y actualización.
+- [x] Indicadores numéricos de total de usuarios, administradores, operadores e inactivos.
+- [x] Muestra mensaje informativo cuando no hay coincidencias con los filtros.
 
-- [ ] En el formulario de entrada, existe un campo de texto para observaciones de entrada (opcional).
-- [ ] En el formulario de salida, existe un campo de texto para observaciones de salida (opcional).
-- [ ] Las observaciones de entrada y salida se almacenan como campos independientes dentro del mismo movimiento.
-- [ ] Las observaciones se muestran en el detalle del movimiento y en la confirmación de entrada/salida.
-- [ ] El campo de observaciones permite texto libre con un máximo de 500 caracteres.
-- [ ] Si no se ingresan observaciones, el campo se almacena como `null` sin generar error.
+### HU08: Registrar usuario
+**Como** Administrador,  
+**quiero** registrar nuevos usuarios en el sistema,  
+**para** habilitar e identificar al personal operativo y administrativo del parqueadero.
 
-### Prioridad
+**Criterios de aceptación:**
+- [x] Formulario con: tipo de documento (`CC`, `CE`, `PASAPORTE`, `TI`), número de documento, nombres, apellidos, correo, teléfono y rol.
+- [x] Valida campos obligatorios y formato de correo electrónico.
+- [x] Valida unicidad de documento y correo (rechaza duplicados con error claro).
+- [x] No solicita ni almacena contraseñas (desarrollo local).
+- [x] Todo usuario nuevo se crea en estado `ACTIVO`.
 
-🟢 **Baja** — Valor agregado para documentación, pero la operación básica funciona sin observaciones.
+### HU09: Actualizar usuario y rol
+**Como** Administrador,  
+**quiero** actualizar los datos y roles de los usuarios,  
+**para** mantener la información vigente y reasignar responsabilidades.
 
-### Requisitos relacionados
+**Criterios de aceptación:**
+- [x] Permite editar datos de contacto, documento y rol.
+- [x] Valida que el documento o correo modificado no pertenezca a otro usuario.
+- [x] Impide retirar el rol de Administrador al último Administrador activo del sistema.
+- [x] Conserva el historial de movimientos asociados al usuario sin alterarlo.
 
-- RF-08: Registrar observaciones de vehículos
-- RN-08: Observaciones independientes
+### HU10: Activar o desactivar usuario
+**Como** Administrador,  
+**quiero** controlar el estado de acceso de los usuarios sin eliminar sus registros históricos,  
+**para** impedir que usuarios inactivos operen sin perder la trazabilidad.
 
----
+**Criterios de aceptación:**
+- [x] Permite alternar entre estado `ACTIVO` e `INACTIVO`.
+- [x] Modal de confirmación explicativo antes de cambiar el estado.
+- [x] Impide que usuarios inactivos registren nuevas entradas o salidas.
+- [x] Impide desactivar al usuario de demostración actualmente en uso.
+- [x] Impide desactivar al último Administrador activo del parqueadero.
 
-## Mapa de Historias vs. Requisitos
+### HU11: Consultar y filtrar celdas
+**Como** Administrador u Operador,  
+**quiero** consultar el inventario de celdas,  
+**para** conocer la disponibilidad, ubicación y compatibilidad de cada espacio.
 
-```mermaid
-flowchart LR
-    subgraph "Historias de Usuario"
-        HU01["HU-01\nRegistrar Entrada"]
-        HU02["HU-02\nRegistrar Salida"]
-        HU03["HU-03\nVehículos Dentro"]
-        HU04["HU-04\nHistorial"]
-        HU05["HU-05\nDashboard"]
-        HU06["HU-06\nObservaciones"]
-    end
-    
-    subgraph "Requisitos Funcionales"
-        RF01["RF-01"] 
-        RF02["RF-02"]
-        RF03["RF-03"]
-        RF04["RF-04"]
-        RF05["RF-05"]
-        RF06["RF-06"]
-        RF07["RF-07"]
-        RF08["RF-08"]
-    end
-    
-    HU01 --> RF01
-    HU01 --> RF05
-    HU01 --> RF06
-    HU01 --> RF08
-    HU02 --> RF02
-    HU02 --> RF03
-    HU02 --> RF08
-    HU03 --> RF03
-    HU03 --> RF07
-    HU04 --> RF04
-    HU05 --> RF07
-    HU05 --> RF03
-    HU06 --> RF08
-```
+**Criterios de aceptación:**
+- [x] Visualiza código, ubicación, tipo/compatibilidad y estado (`LIBRE`, `OCUPADA`, `MANTENIMIENTO`).
+- [x] Para celdas ocupadas, muestra el vehículo asociado, placa y tiempo transcurrido.
+- [x] Filtros por código/búsqueda, tipo (`CARRO`, `MOTO`, `CAMIONETA`, `GENERAL`) y estado.
+- [x] Indicadores en tiempo real de celdas totales, libres, ocupadas y en mantenimiento.
+- [x] El operador solo tiene permisos de lectura (no ve botones de edición ni mantenimiento).
+
+### HU12: Registrar celda
+**Como** Administrador,  
+**quiero** registrar nuevas celdas de parqueadero,  
+**para** ampliar la capacidad física del establecimiento.
+
+**Criterios de aceptación:**
+- [x] Formulario con código único, ubicación, tipo/compatibilidad y descripción opcional.
+- [x] Valida que el código de la celda no exista previamente en el sistema.
+- [x] Toda celda nueva se crea obligatoriamente en estado `LIBRE`.
+- [x] Registra automáticamente evento de auditoría de creación con fecha y responsable.
+
+### HU13: Actualizar información de celda
+**Como** Administrador,  
+**quiero** modificar los datos de ubicación, tipo y descripción de las celdas,  
+**para** reflejar cambios físicos en las instalaciones.
+
+**Criterios de aceptación:**
+- [x] Permite modificar ubicación, tipo/compatibilidad y descripción.
+- [x] El código de la celda permanece inmutable.
+- [x] No permite cambiar manualmente el estado desde el formulario de edición general.
+- [x] Impide modificar la compatibilidad/tipo de una celda si está `OCUPADA`.
+- [x] Registra evento de auditoría de edición con detalle de los campos modificados.
+
+### HU14: Gestionar mantenimiento de celdas
+**Como** Administrador,  
+**quiero** enviar celdas libres a mantenimiento y habilitarlas de nuevo cuando concluyan las obras,  
+**para** controlar la disponibilidad operativa de las plazas.
+
+**Criterios de aceptación:**
+- [x] Permite la transición `LIBRE` → `MANTENIMIENTO` solicitando obligatoriamente el motivo.
+- [x] Permite la transición `MANTENIMIENTO` → `LIBRE` con motivo u observación.
+- [x] Impide enviar a mantenimiento una celda con estado `OCUPADA`.
+- [x] Impide liberar manualmente una celda `OCUPADA` desde la gestión administrativa.
+- [x] Registra trazabilidad histórica en auditoría con fecha, responsable y motivo del mantenimiento.
